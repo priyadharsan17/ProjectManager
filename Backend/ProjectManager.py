@@ -22,6 +22,7 @@ class ProjectManager(QObject):
         self._projects_file = "projects.json"
         self._settings_file = "settings.json"
         self._workspace_dir = self._load_workspace_directory()
+        self._current_project_folder = ""
         self._load_projects()
     
     def _load_workspace_directory(self):
@@ -163,3 +164,13 @@ class ProjectManager(QObject):
             if project.get("name", "").lower() == project_name.lower():
                 return json.dumps(project)
         return "{}"
+    
+    @Slot(str)
+    def setCurrentProjectFolder(self, folder_path):
+        """Set the current project folder."""
+        self._current_project_folder = folder_path
+    
+    @Slot(result=str)
+    def getCurrentProjectFolder(self):
+        """Get the current project folder."""
+        return self._current_project_folder

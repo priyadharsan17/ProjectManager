@@ -194,6 +194,8 @@ Rectangle {
                                     hoverEnabled: true
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: {
+                                        // Set current project folder
+                                        projectManager.setCurrentProjectFolder(modelData.folder_path)
                                         // Load project tasks and navigate to project screen
                                         taskManager.loadProjectTasks(modelData.folder_path)
                                         screenLoader.loadScreen("Screens/ProjectScreen.qml")

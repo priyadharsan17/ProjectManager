@@ -24,17 +24,137 @@ Rectangle {
     function refreshTaskList() {
         taskListModel.clear()
         
+        // Load precedence data for current project
+        var projectFolder = projectManager.getCurrentProjectFolder()
+        if (projectFolder) {
+            precedenceManager.loadProjectPrecedence(projectFolder)
+        }
+        
         // Show all tasks of the current mode type
         for (var i = 0; i < tasksData.length; i++) {
             var task = tasksData[i]
             if (task.type === currentMode) {
+                // Get predecessor from PrecedenceManager
+                var predecessorValue = precedenceManager.getPredecessor(task.type, task.id)
+                
                 taskListModel.append({
                     taskId: task.id,
                     taskName: task.name,
                     taskType: task.type,
-                    taskStatus: task.status
+                    taskStatus: task.status,
+                    estimatedDays: task.estimated_days || 0,
+                    startDate: task.start_date || "",
+                    endDate: task.end_date || "",
+                    predecessor: predecessorValue || ""
                 })
             }
+        }
+        
+        // Sort for link diagram view
+        sortTasksForDiagram()
+    }
+    
+    function sortTasksForDiagram() {
+        sortedDiagramModel.clear()
+        
+        // Create array of tasks with their serial numbers
+        var tasks = []
+        for (var i = 0; i < taskListModel.count; i++) {
+            var task = taskListModel.get(i)
+            tasks.push({
+                serialNum: i + 1,
+                taskId: task.taskId,
+                taskName: task.taskName,
+                taskType: task.taskType,
+                taskStatus: task.taskStatus,
+                estimatedDays: task.estimatedDays,
+                startDate: task.startDate,
+                endDate: task.endDate,
+                predecessor: task.predecessor || "",
+                row: -1,
+                column: -1,
+                processed: false
+            })
+        }
+        
+        // Create a map by serial number for quick lookup
+        var taskMap = {}
+        for (var j = 0; j < tasks.length; j++) {
+            taskMap[tasks[j].serialNum] = tasks[j]
+        }
+        
+        // Calculate positions
+        var currentRow = 0
+        var processed = 0
+        
+        // Process all tasks
+        while (processed < tasks.length) {
+            var foundUnprocessed = false
+            
+            for (var k = 0; k < tasks.length; k++) {
+                var taskObj = tasks[k]
+                if (taskObj.processed) continue
+                
+                if (!taskObj.predecessor || taskObj.predecessor === "") {
+                    // No predecessor - start new row
+                    taskObj.row = currentRow
+                    taskObj.column = 0
+                    taskObj.processed = true
+                    processed++
+                    currentRow++
+                    foundUnprocessed = true
+                } else {
+                    // Has predecessor - check if predecessor is processed
+                    var predNum = parseInt(taskObj.predecessor)
+                    var predTask = taskMap[predNum]
+                    
+                    if (predTask && predTask.processed) {
+                        // Place next to predecessor
+                        taskObj.row = predTask.row
+                        taskObj.column = predTask.column + 1
+                        taskObj.processed = true
+                        processed++
+                        foundUnprocessed = true
+                    }
+                }
+            }
+            
+            // If no task was processed and we still have unprocessed tasks,
+            // process remaining as new rows
+            if (!foundUnprocessed && processed < tasks.length) {
+                for (var m = 0; m < tasks.length; m++) {
+                    var remainingTask = tasks[m]
+                    if (!remainingTask.processed) {
+                        remainingTask.row = currentRow
+                        remainingTask.column = 0
+                        remainingTask.processed = true
+                        processed++
+                        currentRow++
+                        break
+                    }
+                }
+            }
+        }
+        
+        // Build sorted model
+        for (var n = 0; n < tasks.length; n++) {
+            var sortedTask = tasks[n]
+            var hasPredecessor = sortedTask.predecessor !== ""
+            
+            sortedDiagramModel.append({
+                displayIndex: sortedTask.serialNum,
+                taskId: sortedTask.taskId,
+                taskName: sortedTask.taskName,
+                taskType: sortedTask.taskType,
+                taskStatus: sortedTask.taskStatus,
+                estimatedDays: sortedTask.estimatedDays,
+                startDate: sortedTask.startDate,
+                endDate: sortedTask.endDate,
+                predecessor: sortedTask.predecessor,
+                hasPredecessor: hasPredecessor,
+                chainRow: sortedTask.row,
+                chainColumn: sortedTask.column
+            })
         }
     }
     
@@ -104,7 +224,7 @@ Rectangle {
             
             // Left side - Tasks View
             Rectangle {
-                Layout.preferredWidth: parent.width * 0.35
+                Layout.preferredWidth: 400
                 Layout.fillHeight: true
                 color: Qt.rgba(0.08, 0.08, 0.12, 0.95)
                 radius: 20
@@ -351,12 +471,202 @@ Rectangle {
                         Rectangle {
                             color: "transparent"
                             
-                            Text {
-                                anchors.centerIn: parent
-                                text: "Sheet View\n\nTask dependencies will be displayed here in table format"
-                                font.pixelSize: 16
-                                color: "#6b7280"
-                                horizontalAlignment: Text.AlignHCenter
+                            ColumnLayout {
+                                anchors.fill: parent
+                                spacing: 0
+                                
+                                // Header row
+                                Rectangle {
+                                    Layout.fillWidth: true
+                                    Layout.preferredHeight: 50
+                                    color: "#1f2937"
+                                    radius: 10
+                                    
+                                    RowLayout {
+                                        anchors.fill: parent
+                                        anchors.margins: 10
+                                        spacing: 5
+                                        
+                                        Text {
+                                            Layout.preferredWidth: 50
+                                            text: "S.No"
+                                            font.pixelSize: 13
+                                            font.bold: true
+                                            color: "white"
+                                            horizontalAlignment: Text.AlignHCenter
+                                        }
+                                        
+                                        Rectangle { width: 1; Layout.fillHeight: true; color: "#374151" }
+                                        
+                                        Text {
+                                            Layout.fillWidth: true
+                                            Layout.minimumWidth: 150
+                                            text: "Item Name"
+                                            font.pixelSize: 13
+                                            font.bold: true
+                                            color: "white"
+                                        }
+                                        
+                                        Rectangle { width: 1; Layout.fillHeight: true; color: "#374151" }
+                                        
+                                        Text {
+                                            Layout.preferredWidth: 100
+                                            text: "Est. Days"
+                                            font.pixelSize: 13
+                                            font.bold: true
+                                            color: "white"
+                                            horizontalAlignment: Text.AlignHCenter
+                                        }
+                                        
+                                        Rectangle { width: 1; Layout.fillHeight: true; color: "#374151" }
+                                        
+                                        Text {
+                                            Layout.preferredWidth: 120
+                                            text: "Start Date"
+                                            font.pixelSize: 13
+                                            font.bold: true
+                                            color: "white"
+                                            horizontalAlignment: Text.AlignHCenter
+                                        }
+                                        
+                                        Rectangle { width: 1; Layout.fillHeight: true; color: "#374151" }
+                                        
+                                        Text {
+                                            Layout.preferredWidth: 120
+                                            text: "End Date"
+                                            font.pixelSize: 13
+                                            font.bold: true
+                                            color: "white"
+                                            horizontalAlignment: Text.AlignHCenter
+                                        }
+                                        
+                                        Rectangle { width: 1; Layout.fillHeight: true; color: "#374151" }
+                                        
+                                        Text {
+                                            Layout.preferredWidth: 100
+                                            text: "Predecessor"
+                                            font.pixelSize: 13
+                                            font.bold: true
+                                            color: "white"
+                                            horizontalAlignment: Text.AlignHCenter
+                                        }
+                                    }
+                                }
+                                
+                                // Data rows
+                                ScrollView {
+                                    Layout.fillWidth: true
+                                    Layout.fillHeight: true
+                                    clip: true
+                                    
+                                    ListView {
+                                        id: sheetListView
+                                        model: taskListModel
+                                        spacing: 2
+                                        
+                                        delegate: Rectangle {
+                                            width: sheetListView.width
+                                            height: 50
+                                            color: index % 2 === 0 ? Qt.rgba(0.12, 0.12, 0.16, 0.8) : Qt.rgba(0.15, 0.15, 0.2, 0.8)
+                                            
+                                            RowLayout {
+                                                anchors.fill: parent
+                                                anchors.margins: 10
+                                                spacing: 5
+                                                
+                                                Text {
+                                                    Layout.preferredWidth: 50
+                                                    text: (index + 1).toString()
+                                                    font.pixelSize: 12
+                                                    color: "white"
+                                                    horizontalAlignment: Text.AlignHCenter
+                                                }
+                                                
+                                                Rectangle { width: 1; Layout.fillHeight: true; color: "#374151" }
+                                                
+                                                Text {
+                                                    Layout.fillWidth: true
+                                                    Layout.minimumWidth: 150
+                                                    text: model.taskName
+                                                    font.pixelSize: 12
+                                                    color: "white"
+                                                    elide: Text.ElideRight
+                                                }
+                                                
+                                                Rectangle { width: 1; Layout.fillHeight: true; color: "#374151" }
+                                                
+                                                Text {
+                                                    Layout.preferredWidth: 100
+                                                    text: model.estimatedDays || "-"
+                                                    font.pixelSize: 12
+                                                    color: "white"
+                                                    horizontalAlignment: Text.AlignHCenter
+                                                }
+                                                
+                                                Rectangle { width: 1; Layout.fillHeight: true; color: "#374151" }
+                                                
+                                                Text {
+                                                    Layout.preferredWidth: 120
+                                                    text: model.startDate || "-"
+                                                    font.pixelSize: 12
+                                                    color: "white"
+                                                    horizontalAlignment: Text.AlignHCenter
+                                                }
+                                                
+                                                Rectangle { width: 1; Layout.fillHeight: true; color: "#374151" }
+                                                
+                                                Text {
+                                                    Layout.preferredWidth: 120
+                                                    text: model.endDate || "-"
+                                                    font.pixelSize: 12
+                                                    color: "white"
+                                                    horizontalAlignment: Text.AlignHCenter
+                                                }
+                                                
+                                                Rectangle { width: 1; Layout.fillHeight: true; color: "#374151" }
+                                                
+                                                Rectangle {
+                                                    Layout.preferredWidth: 100
+                                                    Layout.fillHeight: true
+                                                    color: "transparent"
+                                                    
+                                                    TextField {
+                                                        anchors.centerIn: parent
+                                                        width: parent.width - 10
+                                                        height: 30
+                                                        text: model.predecessor || ""
+                                                        placeholderText: "-"
+                                                        font.pixelSize: 12
+                                                        horizontalAlignment: Text.AlignHCenter
+                                                        color: "white"
+                                                        
+                                                        background: Rectangle {
+                                                            color: parent.activeFocus ? Qt.rgba(0.2, 0.2, 0.3, 0.8) : "transparent"
+                                                            border.color: parent.activeFocus ? "#6366f1" : Qt.rgba(0.3, 0.3, 0.4, 0.5)
+                                                            border.width: 1
+                                                            radius: 5
+                                                        }
+                                                        
+                                                        onEditingFinished: {
+                                                            // Save predecessor when user finishes editing
+                                                            var taskId = model.taskId
+                                                            var taskType = model.taskType
+                                                            var predecessorValue = text.trim()
+                                                            
+                                                            precedenceManager.setPredecessor(taskType, taskId, predecessorValue)
+                                                            
+                                                            // Update model
+                                                            model.predecessor = predecessorValue
+                                                            
+                                                            // Refresh link diagram sorting
+                                                            sortTasksForDiagram()
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                         
@@ -364,13 +674,188 @@ Rectangle {
                         Rectangle {
                             color: "transparent"
                             
-                            Text {
-                                anchors.centerIn: parent
-                                text: "Link Diagram View\n\nTask dependency diagram will be displayed here"
-                                font.pixelSize: 16
-                                color: "#6b7280"
-                                horizontalAlignment: Text.AlignHCenter
+                            // Sorted task list model for link diagram
+                            ListModel {
+                                id: sortedDiagramModel
                             }
+                            
+                            ScrollView {
+                                anchors.fill: parent
+                                clip: true
+                                contentWidth: diagramContainer.childrenRect.width + 100
+                                contentHeight: diagramContainer.childrenRect.height + 100
+                                ScrollBar.horizontal.policy: ScrollBar.AlwaysOn
+                                ScrollBar.vertical.policy: ScrollBar.AlwaysOn
+                                
+                                Item {
+                                    id: diagramContainer
+                                    width: childrenRect.width + 100
+                                    height: childrenRect.height + 100
+                                    
+                                    Repeater {
+                                        id: diagramRepeater
+                                        model: sortedDiagramModel
+                                        
+                                        Item {
+                                            id: taskItem
+                                            width: 280
+                                            height: 120
+                                            
+                                            property int chainRow: model.chainRow || 0
+                                            property int chainCol: model.chainColumn || 0
+                                            
+                                            x: 50 + (chainCol * 280)
+                                            y: 50 + (chainRow * 180)
+                                            
+                                            // Task block
+                                            Rectangle {
+                                                id: taskBlock
+                                                width: 200
+                                                height: 120
+                                                color: Qt.rgba(0.15, 0.15, 0.2, 0.9)
+                                                radius: 12
+                                                border.color: getColorForTaskType(model.taskType)
+                                                border.width: 3
+                                                
+                                                // Left color strip
+                                                Rectangle {
+                                                    width: 6
+                                                    height: parent.height
+                                                    anchors.left: parent.left
+                                                    radius: 12
+                                                    color: getColorForTaskType(model.taskType)
+                                                }
+                                                
+                                                ColumnLayout {
+                                                    anchors.fill: parent
+                                                        anchors.margins: 15
+                                                        spacing: 8
+                                                        
+                                                        Text {
+                                                            Layout.fillWidth: true
+                                                            text: model.displayIndex + ". " + model.taskName
+                                                            font.pixelSize: 13
+                                                            font.bold: true
+                                                            color: "white"
+                                                            wrapMode: Text.WordWrap
+                                                            maximumLineCount: 2
+                                                            elide: Text.ElideRight
+                                                        }
+                                                        
+                                                        Text {
+                                                            text: model.taskType
+                                                            font.pixelSize: 10
+                                                            color: getColorForTaskType(model.taskType)
+                                                        }
+                                                        
+                                                        RowLayout {
+                                                            Layout.fillWidth: true
+                                                            spacing: 5
+                                                            
+                                                            Text {
+                                                                text: "📅 " + (model.estimatedDays || "0") + " days"
+                                                                font.pixelSize: 10
+                                                                color: "#94a3b8"
+                                                            }
+                                                        }
+                                                        
+                                                        Text {
+                                                            Layout.fillWidth: true
+                                                            text: model.predecessor ? "← Depends on: #" + model.predecessor : "No predecessor"
+                                                            font.pixelSize: 9
+                                                            color: model.predecessor ? "#fbbf24" : "#6b7280"
+                                                            elide: Text.ElideRight
+                                                        }
+                                                    }
+                                                }
+                                                
+                                                // Rope-like connector to next task (if this task has a successor)
+                                                Canvas {
+                                                    id: ropeCanvas
+                                                    x: 200
+                                                    y: 0
+                                                    width: 80
+                                                    height: 120
+                                                    
+                                                    property bool hasSuccessor: false
+                                                    
+                                                    // Check if any task has this task as predecessor
+                                                    Component.onCompleted: {
+                                                        checkForSuccessor()
+                                                    }
+                                                    
+                                                    Connections {
+                                                        target: sortedDiagramModel
+                                                        function onCountChanged() {
+                                                            ropeCanvas.checkForSuccessor()
+                                                        }
+                                                    }
+                                                    
+                                                    function checkForSuccessor() {
+                                                        hasSuccessor = false
+                                                        var mySerialNum = model.displayIndex.toString()
+                                                        
+                                                        for (var i = 0; i < sortedDiagramModel.count; i++) {
+                                                            var otherTask = sortedDiagramModel.get(i)
+                                                            if (otherTask.predecessor === mySerialNum) {
+                                                                hasSuccessor = true
+                                                                break
+                                                            }
+                                                        }
+                                                        requestPaint()
+                                                    }
+                                                    
+                                                    visible: hasSuccessor
+                                                    
+                                                    onPaint: {
+                                                        var ctx = getContext("2d")
+                                                        ctx.clearRect(0, 0, width, height)
+                                                        
+                                                        if (hasSuccessor) {
+                                                            // Draw simple horizontal connector with slight sag
+                                                            ctx.strokeStyle = "#6366f1"
+                                                            ctx.lineWidth = 3
+                                                            ctx.lineCap = "round"
+                                                            
+                                                            // Main curve - horizontal with slight downward sag
+                                                            ctx.beginPath()
+                                                            ctx.moveTo(0, 60) // Start from left edge (right side of current task)
+                                                            
+                                                            // Bezier curve with slight sag
+                                                            var controlX1 = 20
+                                                            var controlY1 = 65 // Slight sag
+                                                            var controlX2 = 60
+                                                            var controlY2 = 65 // Slight sag
+                                                            var endX = 80
+                                                            var endY = 60
+                                                            
+                                                            ctx.bezierCurveTo(controlX1, controlY1, controlX2, controlY2, endX, endY)
+                                                            ctx.stroke()
+                                                            
+                                                            // Add chain link circles
+                                                            for (var i = 0; i <= 1; i += 0.25) {
+                                                                var t = i
+                                                                var x = Math.pow(1-t, 3) * 0 + 
+                                                                       3 * Math.pow(1-t, 2) * t * controlX1 +
+                                                                       3 * (1-t) * Math.pow(t, 2) * controlX2 +
+                                                                       Math.pow(t, 3) * endX
+                                                                var y = Math.pow(1-t, 3) * 60 + 
+                                                                       3 * Math.pow(1-t, 2) * t * controlY1 +
+                                                                       3 * (1-t) * Math.pow(t, 2) * controlY2 +
+                                                                       Math.pow(t, 3) * endY
+                                                                
+                                                                ctx.beginPath()
+                                                                ctx.arc(x, y, 4, 0, 2 * Math.PI)
+                                                                ctx.fillStyle = "#818cf8"
+                                                                ctx.fill()
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                         }
                     }
                 }
