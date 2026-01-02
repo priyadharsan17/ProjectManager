@@ -10,6 +10,7 @@ from Backend.LoginManager import LoginManager
 from Backend.ScreenLoader import ScreenLoader
 from Backend.ProjectManager import ProjectManager
 from Backend.SettingsManager import SettingsManager
+from Backend.TaskManager import TaskManager
 
 
 def main():
@@ -33,12 +34,14 @@ def main():
     screen_loader = ScreenLoader()
     project_manager = ProjectManager()
     settings_manager = SettingsManager()
+    task_manager = TaskManager()
     
     # Expose managers to QML
     engine.rootContext().setContextProperty("loginManager", login_manager)
     engine.rootContext().setContextProperty("screenLoader", screen_loader)
     engine.rootContext().setContextProperty("projectManager", project_manager)
     engine.rootContext().setContextProperty("settingsManager", settings_manager)
+    engine.rootContext().setContextProperty("taskManager", task_manager)
     
     # Load the main QML file
     qml_file = Path(__file__).parent / "main.qml"

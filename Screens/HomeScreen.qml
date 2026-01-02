@@ -285,8 +285,7 @@ Rectangle {
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
-                            console.log("Open Project clicked")
-                            // TODO: Implement open project functionality
+                            screenLoader.loadScreen("Screens/ProjectListScreen.qml")
                         }
                     }
                 }
