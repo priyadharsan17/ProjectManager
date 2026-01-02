@@ -49,7 +49,7 @@ Rectangle {
                 }
                 
                 onClicked: {
-                    screenLoader.loadScreen("Screens/ProjectListScreen.qml")
+                    screenLoader.loadScreen("Screens/ProjectScreen.qml")
                 }
                 
                 MouseArea {
@@ -61,7 +61,7 @@ Rectangle {
             
             Text {
                 Layout.fillWidth: true
-                text: "Project Dashboard"
+                text: "Gantt Chart"
                 font.pixelSize: 32
                 font.bold: true
                 color: "white"
@@ -79,13 +79,13 @@ Rectangle {
                 columnSpacing: 40
                 rowSpacing: 40
                 
-                // Task Definition button
+                // Precedence Definition button
                 Rectangle {
                     Layout.preferredWidth: 340
                     Layout.preferredHeight: 320
                     color: Qt.rgba(0.1, 0.1, 0.15, 0.8)
                     radius: 20
-                    border.color: taskDefArea.containsMouse ? "#6366f1" : Qt.rgba(0.3, 0.3, 0.4, 0.3)
+                    border.color: precedenceArea.containsMouse ? "#f59e0b" : Qt.rgba(0.3, 0.3, 0.4, 0.3)
                     border.width: 2
                     
                     Behavior on border.color { ColorAnimation { duration: 200 } }
@@ -108,17 +108,17 @@ Rectangle {
                             Layout.preferredHeight: 100
                             radius: 50
                             gradient: Gradient {
-                                GradientStop { position: 0.0; color: "#6366f1" }
-                                GradientStop { position: 1.0; color: "#8b5cf6" }
+                                GradientStop { position: 0.0; color: "#f59e0b" }
+                                GradientStop { position: 1.0; color: "#d97706" }
                             }
                             
                             Text {
                                 anchors.centerIn: parent
-                                text: "📋"
+                                text: "🔗"
                                 font.pixelSize: 50
                             }
                             
-                            scale: taskDefArea.containsMouse ? 1.1 : 1.0
+                            scale: precedenceArea.containsMouse ? 1.1 : 1.0
                             Behavior on scale {
                                 NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
                             }
@@ -126,7 +126,7 @@ Rectangle {
                         
                         Text {
                             Layout.alignment: Qt.AlignHCenter
-                            text: "Task Definition"
+                            text: "Precedence Definition"
                             font.pixelSize: 24
                             font.bold: true
                             color: "white"
@@ -135,7 +135,7 @@ Rectangle {
                         Text {
                             Layout.alignment: Qt.AlignHCenter
                             Layout.preferredWidth: 280
-                            text: "Define and manage project tasks hierarchy"
+                            text: "Define task dependencies and relationships"
                             font.pixelSize: 14
                             color: "#94a3b8"
                             horizontalAlignment: Text.AlignHCenter
@@ -144,23 +144,24 @@ Rectangle {
                     }
                     
                     MouseArea {
-                        id: taskDefArea
+                        id: precedenceArea
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
-                            screenLoader.loadScreen("Screens/TaskDefinitionScreen.qml")
+                            console.log("Precedence Definition clicked - Coming soon!")
+                            // TODO: Implement Precedence Definition screen
                         }
                     }
                 }
                 
-                // Gantt Chart button
+                // Chart button
                 Rectangle {
                     Layout.preferredWidth: 340
                     Layout.preferredHeight: 320
                     color: Qt.rgba(0.1, 0.1, 0.15, 0.8)
                     radius: 20
-                    border.color: ganttArea.containsMouse ? "#10b981" : Qt.rgba(0.3, 0.3, 0.4, 0.3)
+                    border.color: chartArea.containsMouse ? "#10b981" : Qt.rgba(0.3, 0.3, 0.4, 0.3)
                     border.width: 2
                     
                     Behavior on border.color { ColorAnimation { duration: 200 } }
@@ -189,11 +190,11 @@ Rectangle {
                             
                             Text {
                                 anchors.centerIn: parent
-                                text: "📊"
+                                text: "📈"
                                 font.pixelSize: 50
                             }
                             
-                            scale: ganttArea.containsMouse ? 1.1 : 1.0
+                            scale: chartArea.containsMouse ? 1.1 : 1.0
                             Behavior on scale {
                                 NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
                             }
@@ -201,7 +202,7 @@ Rectangle {
                         
                         Text {
                             Layout.alignment: Qt.AlignHCenter
-                            text: "Gantt Chart"
+                            text: "Chart"
                             font.pixelSize: 24
                             font.bold: true
                             color: "white"
@@ -210,7 +211,7 @@ Rectangle {
                         Text {
                             Layout.alignment: Qt.AlignHCenter
                             Layout.preferredWidth: 280
-                            text: "View project timeline and dependencies"
+                            text: "View Gantt chart with timeline visualization"
                             font.pixelSize: 14
                             color: "#94a3b8"
                             horizontalAlignment: Text.AlignHCenter
@@ -219,12 +220,13 @@ Rectangle {
                     }
                     
                     MouseArea {
-                        id: ganttArea
+                        id: chartArea
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
-                            screenLoader.loadScreen("Screens/GanttChartScreen.qml")
+                            console.log("Chart clicked - Coming soon!")
+                            // TODO: Implement Chart visualization screen
                         }
                     }
                 }
