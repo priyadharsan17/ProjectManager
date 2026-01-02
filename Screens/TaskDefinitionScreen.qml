@@ -481,7 +481,7 @@ Rectangle {
                                         onClicked: {
                                             selectedParentId = model.taskId
                                             var childType = getChildTypeForParent(model.taskType)
-                                            addTaskDialog.title = "Add " + childType + " to " + model.taskName
+                                            addTaskDialog.dialogTitle = "Add " + childType + " to " + model.taskName
                                             addTaskDialog.open()
                                         }
                                     }
@@ -510,12 +510,34 @@ Rectangle {
     // Add Task Dialog
     Dialog {
         id: addTaskDialog
-        title: "Add " + currentMode
         modal: true
         anchors.centerIn: parent
         width: 450
-        height: 350
-        padding: 20
+        height: 400
+        
+        property string dialogTitle: "Add " + currentMode
+        
+        header: Rectangle {
+            width: parent.width
+            height: 50
+            color: "#1f2937"
+            radius: 12
+            
+            Rectangle {
+                anchors.bottom: parent.bottom
+                width: parent.width
+                height: parent.radius
+                color: parent.color
+            }
+            
+            Text {
+                anchors.centerIn: parent
+                text: addTaskDialog.dialogTitle
+                font.pixelSize: 16
+                font.bold: true
+                color: "white"
+            }
+        }
         
         background: Rectangle {
             color: "#1f2937"
@@ -524,121 +546,125 @@ Rectangle {
             border.width: 1
         }
         
-        contentItem: ColumnLayout {
-            spacing: 15
-            
-            Text {
-                text: "Task Name:"
-                font.pixelSize: 14
-                color: "white"
-            }
-            
-            TextField {
-                id: taskNameField
-                Layout.fillWidth: true
-                Layout.preferredHeight: 40
-                placeholderText: "Enter task name"
-                color: "white"
-                leftPadding: 12
-                rightPadding: 12
+        contentItem: Item {
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: 20
+                spacing: 15
                 
-                background: Rectangle {
-                    color: "#374151"
-                    radius: 6
-                }
-            }
-            
-            Text {
-                text: "Description:"
-                font.pixelSize: 14
-                color: "white"
-            }
-            
-            ScrollView {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 100
-                clip: true
-                
-                TextArea {
-                    id: taskDescField
-                    width: parent.width
-                    placeholderText: "Enter description"
+                Text {
+                    text: "Task Name:"
+                    font.pixelSize: 14
                     color: "white"
-                    wrapMode: TextArea.Wrap
-                    padding: 12
+                }
+                
+                TextField {
+                    id: taskNameField
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 40
+                    placeholderText: "Enter task name"
+                    color: "white"
+                    leftPadding: 12
+                    rightPadding: 12
                     
                     background: Rectangle {
                         color: "#374151"
                         radius: 6
                     }
                 }
-            }
-            
-            Item {
-                Layout.fillHeight: true
-            }
-            
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: 10
                 
-                Button {
+                Text {
+                    text: "Description:"
+                    font.pixelSize: 14
+                    color: "white"
+                }
+                
+                ScrollView {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 40
-                    text: "Cancel"
-                    onClicked: {
-                        taskNameField.text = ""
-                        taskDescField.text = ""
-                        selectedParentId = ""
-                        addTaskDialog.close()
-                    }
+                    Layout.preferredHeight: 100
+                    clip: true
                     
-                    background: Rectangle {
-                        color: parent.hovered ? "#4b5563" : "#374151"
-                        radius: 6
-                    }
-                    
-                    contentItem: Text {
-                        text: parent.text
+                    TextArea {
+                        id: taskDescField
+                        width: parent.width
+                        placeholderText: "Enter description"
                         color: "white"
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                        font.pixelSize: 14
+                        wrapMode: TextArea.Wrap
+                        padding: 12
+                        
+                        background: Rectangle {
+                            color: "#374151"
+                            radius: 6
+                        }
                     }
                 }
                 
-                Button {
+                Item {
+                    Layout.fillHeight: true
+                }
+                
+                RowLayout {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 40
-                    text: "Create"
-                    onClicked: {
-                        if (taskNameField.text.trim() !== "") {
-                            // If selectedParentId is set, create as child; otherwise use currentMode as top-level
-                            var taskType = selectedParentId !== "" ? getChildTypeForParent(
-                                tasksData.find(function(t) { return t.id === selectedParentId }).type
-                            ) : currentMode
-                            
-                            taskManager.createTask(taskType, taskNameField.text, taskDescField.text, selectedParentId)
+                    spacing: 10
+                    
+                    Button {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 40
+                        text: "Cancel"
+                        onClicked: {
                             taskNameField.text = ""
                             taskDescField.text = ""
                             selectedParentId = ""
                             addTaskDialog.close()
-                            loadTasks()
+                        }
+                        
+                        background: Rectangle {
+                            color: parent.hovered ? "#4b5563" : "#374151"
+                            radius: 6
+                        }
+                        
+                        contentItem: Text {
+                            text: parent.text
+                            color: "white"
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                            font.pixelSize: 14
                         }
                     }
                     
-                    background: Rectangle {
-                        color: parent.hovered ? "#5558e3" : "#6366f1"
-                        radius: 6
-                    }
-                    
-                    contentItem: Text {
-                        text: parent.text
-                        color: "white"
-                        font.bold: true
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                        font.pixelSize: 14
+                    Button {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 40
+                        text: "Create"
+                        onClicked: {
+                            if (taskNameField.text.trim() !== "") {
+                                // If selectedParentId is set, create as child; otherwise use currentMode as top-level
+                                var taskType = selectedParentId !== "" ? getChildTypeForParent(
+                                    tasksData.find(function(t) { return t.id === selectedParentId }).type
+                                ) : currentMode
+                                
+                                taskManager.createTask(taskType, taskNameField.text, taskDescField.text, selectedParentId)
+                                taskNameField.text = ""
+                                taskDescField.text = ""
+                                selectedParentId = ""
+                                addTaskDialog.close()
+                                loadTasks()
+                            }
+                        }
+                        
+                        background: Rectangle {
+                            color: parent.hovered ? "#5558e3" : "#6366f1"
+                            radius: 6
+                        }
+                        
+                        contentItem: Text {
+                            text: parent.text
+                            color: "white"
+                            font.bold: true
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                            font.pixelSize: 14
+                        }
                     }
                 }
             }
