@@ -11,6 +11,7 @@ from Backend.ScreenLoader import ScreenLoader
 from Backend.ProjectManager import ProjectManager
 from Backend.SettingsManager import SettingsManager
 from Backend.TaskManager import TaskManager
+from Backend.PrecedenceManager import PrecedenceManager
 
 
 def main():
@@ -35,9 +36,15 @@ def main():
     project_manager = ProjectManager()
     settings_manager = SettingsManager()
     task_manager = TaskManager()
+    precedence_manager = PrecedenceManager()
     
     # Expose managers to QML
     engine.rootContext().setContextProperty("loginManager", login_manager)
+    engine.rootContext().setContextProperty("screenLoader", screen_loader)
+    engine.rootContext().setContextProperty("projectManager", project_manager)
+    engine.rootContext().setContextProperty("settingsManager", settings_manager)
+    engine.rootContext().setContextProperty("taskManager", task_manager)
+    engine.rootContext().setContextProperty("precedenceManager", precedence_manager)
     engine.rootContext().setContextProperty("screenLoader", screen_loader)
     engine.rootContext().setContextProperty("projectManager", project_manager)
     engine.rootContext().setContextProperty("settingsManager", settings_manager)
