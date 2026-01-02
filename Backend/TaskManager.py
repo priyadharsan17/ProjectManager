@@ -30,21 +30,60 @@ class TaskManager(QObject):
     
     @Slot(str)
     def loadProjectTasks(self, project_folder_path):
-        """Load tasks for a specific project."""
+        """Load tasks for a specific project from separate JSON files."""
         self._current_project_path = project_folder_path
-        tasks_file = os.path.join(project_folder_path, "tasks", "tasks.json")
+        tasks_dir = os.path.join(project_folder_path, "tasks")
         
-        if os.path.exists(tasks_file):
-            try:
-                with open(tasks_file, 'r') as f:
-                    self._tasks = json.load(f)
-            except Exception as e:
-                print(f"Error loading tasks: {e}")
-                self._tasks = []
-        else:
-            self._tasks = []
-            # Ensure tasks directory exists
-            os.makedirs(os.path.join(project_folder_path, "tasks"), exist_ok=True)
+        # Ensure tasks directory exists
+        os.makedirs(tasks_dir, exist_ok=True)
+        
+        self._tasks = []
+        
+        # Load from separate files: epics.json, features.json, pbis.json, tasks.json
+        task_files = {
+            "Epic": "epics.json",
+            "Feature": "features.json",
+            "PBI": "pbis.json",
+            "Task": "tasks.json"
+        }
+        
+        for task_type, filename in task_files.items():
+            file_path = os.path.join(tasks_dir, filename)
+            if os.path.exists(file_path):
+                try:
+                    with open(file_path, 'r') as f:
+                        tasks_of_type = json.load(f)
+                        # Convert simplified format to full task objects
+                        for task_data in tasks_of_type:
+                            # Find if task already exists (avoid duplicates)
+                            existing = next((t for t in self._tasks if t.get("id") == task_data.get("ID")), None)
+                            if not existing:
+                                full_task = {
+                                    "id": task_data.get("ID", ""),
+                                    "type": task_type,
+                                    "name": task_data.get("Name", ""),
+                                    "description": task_data.get("Description", ""),
+                                    "parent_id": task_data.get("Parent", ""),
+                                    "status": task_data.get("Status", "ToDo"),
+                                    "created_date": task_data.get("CreatedDate", ""),
+                                    "start_date": task_data.get("StartDate", ""),
+                                    "end_date": task_data.get("EndDate", ""),
+                                    "progress": task_data.get("Progress", 0),
+                                    "children": []
+                                }
+                                self._tasks.append(full_task)
+                except Exception as e:
+                    print(f"Error loading {filename}: {e}")
+        
+        # Build children relationships
+        for task in self._tasks:
+            task_id = task.get("id")
+            for other_task in self._tasks:
+                if other_task.get("parent_id") == task_id:
+                    if task_id not in task.get("children", []):
+                        if "children" not in task:
+                            task["children"] = []
+                        task["children"].append(other_task.get("id"))
         
         self._build_hierarchy()
         self.currentProjectChanged.emit(project_folder_path)
@@ -65,14 +104,46 @@ class TaskManager(QObject):
                 self._task_hierarchy[task_type].append(task)
     
     def _save_tasks(self):
-        """Save tasks to file."""
+        """Save tasks to separate JSON files by type."""
         if not self._current_project_path:
             return False
         
-        tasks_file = os.path.join(self._current_project_path, "tasks", "tasks.json")
+        tasks_dir = os.path.join(self._current_project_path, "tasks")
+        os.makedirs(tasks_dir, exist_ok=True)
+        
+        # Group tasks by type
+        task_files = {
+            "Epic": "epics.json",
+            "Feature": "features.json",
+            "PBI": "pbis.json",
+            "Task": "tasks.json"
+        }
+        
         try:
-            with open(tasks_file, 'w') as f:
-                json.dump(self._tasks, f, indent=4)
+            for task_type, filename in task_files.items():
+                file_path = os.path.join(tasks_dir, filename)
+                
+                # Filter tasks of this type and convert to simplified format
+                tasks_of_type = []
+                for task in self._tasks:
+                    if task.get("type") == task_type:
+                        simplified_task = {
+                            "ID": task.get("id", ""),
+                            "Name": task.get("name", ""),
+                            "Description": task.get("description", ""),
+                            "Parent": task.get("parent_id", ""),
+                            "Status": task.get("status", "ToDo"),
+                            "CreatedDate": task.get("created_date", ""),
+                            "StartDate": task.get("start_date", ""),
+                            "EndDate": task.get("end_date", ""),
+                            "Progress": task.get("progress", 0)
+                        }
+                        tasks_of_type.append(simplified_task)
+                
+                # Save to file
+                with open(file_path, 'w') as f:
+                    json.dump(tasks_of_type, f, indent=4)
+            
             return True
         except Exception as e:
             print(f"Error saving tasks: {e}")

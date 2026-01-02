@@ -9,6 +9,7 @@ Rectangle {
     
     property string currentMode: "Epic"
     property var tasksData: []
+    property string selectedParentId: ""
     
     Component.onCompleted: {
         loadTasks()
@@ -24,10 +25,20 @@ Rectangle {
     function refreshTaskList() {
         taskListModel.clear()
         
-        // Filter tasks based on current mode
+        // Show all tasks of the current mode type
         for (var i = 0; i < tasksData.length; i++) {
             var task = tasksData[i]
-            if (task.type === currentMode && !task.parent_id) {
+            if (task.type === currentMode) {
+                // Calculate level based on parent hierarchy
+                var level = 0
+                var currentParentId = task.parent_id
+                while (currentParentId) {
+                    level++
+                    var parentTask = tasksData.find(function(t) { return t.id === currentParentId })
+                    if (!parentTask) break
+                    currentParentId = parentTask.parent_id
+                }
+                
                 taskListModel.append({
                     taskId: task.id,
                     taskName: task.name,
@@ -35,8 +46,9 @@ Rectangle {
                     taskStatus: task.status,
                     taskProgress: task.progress || 0,
                     taskDescription: task.description || "",
+                    parentId: task.parent_id || "",
                     isExpanded: false,
-                    level: 0,
+                    level: level,
                     hasChildren: task.children && task.children.length > 0
                 })
             }
@@ -49,41 +61,77 @@ Rectangle {
             return
         }
         
+        var insertIndex = parentIndex + 1
         for (var i = 0; i < parent.children.length; i++) {
             var childId = parent.children[i]
             var child = tasksData.find(function(t) { return t.id === childId })
             
             if (child) {
-                taskListModel.insert(parentIndex + i + 1, {
+                taskListModel.insert(insertIndex, {
                     taskId: child.id,
                     taskName: child.name,
                     taskType: child.type,
                     taskStatus: child.status,
                     taskProgress: child.progress || 0,
                     taskDescription: child.description || "",
+                    parentId: child.parent_id || "",
                     isExpanded: false,
                     level: level + 1,
                     hasChildren: child.children && child.children.length > 0
                 })
+                insertIndex++
             }
         }
     }
     
-    function removeChildrenFromModel(parentId) {
-        // Remove all children of the given parent
-        var removeIndices = []
-        for (var i = 0; i < taskListModel.count; i++) {
+    function removeChildrenFromModel(parentId, startIndex) {
+        // Remove all descendants of the given parent recursively
+        var i = startIndex + 1
+        while (i < taskListModel.count) {
             var item = taskListModel.get(i)
             var task = tasksData.find(function(t) { return t.id === item.taskId })
-            if (task && task.parent_id === parentId) {
-                removeIndices.push(i)
+            
+            // Check if this task is a descendant of parentId
+            if (task && isDescendant(task.id, parentId)) {
+                taskListModel.remove(i)
+                // Don't increment i since we removed an item
+            } else {
+                // If we hit a task that's not a descendant, we're done
+                break
             }
         }
+    }
+    
+    function isDescendant(taskId, ancestorId) {
+        var task = tasksData.find(function(t) { return t.id === taskId })
+        if (!task) return false
         
-        // Remove in reverse order
-        for (var j = removeIndices.length - 1; j >= 0; j--) {
-            taskListModel.remove(removeIndices[j])
+        var currentParentId = task.parent_id
+        while (currentParentId) {
+            if (currentParentId === ancestorId) {
+                return true
+            }
+            var parentTask = tasksData.find(function(t) { return t.id === currentParentId })
+            if (!parentTask) break
+            currentParentId = parentTask.parent_id
         }
+        return false
+    }
+    
+    function getChildTypeForParent(parentType) {
+        if (parentType === "Epic") return "Feature"
+        if (parentType === "Feature") return "PBI"
+        if (parentType === "PBI") return "Task"
+        return ""
+    }
+    
+    function collapseAll() {
+        // Set all items to not expanded
+        for (var i = 0; i < taskListModel.count; i++) {
+            taskListModel.setProperty(i, "isExpanded", false)
+        }
+        // Reload to show only items of current type
+        refreshTaskList()
     }
     
     // Gradient background
@@ -212,6 +260,38 @@ Rectangle {
                     refreshTaskList()
                 }
             }
+            
+            // Collapse All Button
+            Button {
+                Layout.preferredWidth: 120
+                Layout.preferredHeight: 40
+                text: "Collapse All"
+                
+                contentItem: Text {
+                    text: parent.text
+                    font.pixelSize: 14
+                    font.bold: true
+                    color: "white"
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+                
+                background: Rectangle {
+                    radius: 10
+                    color: parent.pressed ? "#4b5563" : (parent.hovered ? "#6b7280" : "#374151")
+                    Behavior on color { ColorAnimation { duration: 200 } }
+                }
+                
+                onClicked: {
+                    collapseAll()
+                }
+                
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onPressed: function(mouse) { mouse.accepted = false }
+                }
+            }
         }
         
         // Task list
@@ -325,7 +405,7 @@ Rectangle {
                                             if (expanded) {
                                                 addChildrenToModel(model.taskId, index, model.level)
                                             } else {
-                                                removeChildrenFromModel(model.taskId)
+                                                removeChildrenFromModel(model.taskId, index)
                                             }
                                         }
                                     }
@@ -374,6 +454,38 @@ Rectangle {
                                     font.bold: true
                                     color: "#22c55e"
                                 }
+                                
+                                // Add Child button
+                                Rectangle {
+                                    Layout.preferredWidth: 36
+                                    Layout.preferredHeight: 36
+                                    radius: 18
+                                    color: addChildMouseArea.containsMouse ? "#6366f1" : Qt.rgba(0.39, 0.40, 0.95, 0.3)
+                                    visible: model.taskType !== "Task"  // Task is leaf node, can't have children
+                                    
+                                    Behavior on color { ColorAnimation { duration: 200 } }
+                                    
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "+"
+                                        font.pixelSize: 20
+                                        font.bold: true
+                                        color: "white"
+                                    }
+                                    
+                                    MouseArea {
+                                        id: addChildMouseArea
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            selectedParentId = model.taskId
+                                            var childType = getChildTypeForParent(model.taskType)
+                                            addTaskDialog.title = "Add " + childType + " to " + model.taskName
+                                            addTaskDialog.open()
+                                        }
+                                    }
+                                }
                             }
                             
                             MouseArea {
@@ -381,6 +493,7 @@ Rectangle {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
+                                z: -1
                             }
                         }
                     }
@@ -400,8 +513,9 @@ Rectangle {
         title: "Add " + currentMode
         modal: true
         anchors.centerIn: parent
-        width: 400
-        height: 300
+        width: 450
+        height: 350
+        padding: 20
         
         background: Rectangle {
             color: "#1f2937"
@@ -410,8 +524,7 @@ Rectangle {
             border.width: 1
         }
         
-        ColumnLayout {
-            anchors.fill: parent
+        contentItem: ColumnLayout {
             spacing: 15
             
             Text {
@@ -423,8 +536,11 @@ Rectangle {
             TextField {
                 id: taskNameField
                 Layout.fillWidth: true
+                Layout.preferredHeight: 40
                 placeholderText: "Enter task name"
                 color: "white"
+                leftPadding: 12
+                rightPadding: 12
                 
                 background: Rectangle {
                     color: "#374151"
@@ -438,17 +554,23 @@ Rectangle {
                 color: "white"
             }
             
-            TextArea {
-                id: taskDescField
+            ScrollView {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 80
-                placeholderText: "Enter description"
-                color: "white"
-                wrapMode: TextArea.Wrap
+                Layout.preferredHeight: 100
+                clip: true
                 
-                background: Rectangle {
-                    color: "#374151"
-                    radius: 6
+                TextArea {
+                    id: taskDescField
+                    width: parent.width
+                    placeholderText: "Enter description"
+                    color: "white"
+                    wrapMode: TextArea.Wrap
+                    padding: 12
+                    
+                    background: Rectangle {
+                        color: "#374151"
+                        radius: 6
+                    }
                 }
             }
             
@@ -462,8 +584,14 @@ Rectangle {
                 
                 Button {
                     Layout.fillWidth: true
+                    Layout.preferredHeight: 40
                     text: "Cancel"
-                    onClicked: addTaskDialog.close()
+                    onClicked: {
+                        taskNameField.text = ""
+                        taskDescField.text = ""
+                        selectedParentId = ""
+                        addTaskDialog.close()
+                    }
                     
                     background: Rectangle {
                         color: parent.hovered ? "#4b5563" : "#374151"
@@ -475,17 +603,25 @@ Rectangle {
                         color: "white"
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
+                        font.pixelSize: 14
                     }
                 }
                 
                 Button {
                     Layout.fillWidth: true
+                    Layout.preferredHeight: 40
                     text: "Create"
                     onClicked: {
                         if (taskNameField.text.trim() !== "") {
-                            taskManager.createTask(currentMode, taskNameField.text, taskDescField.text, "")
+                            // If selectedParentId is set, create as child; otherwise use currentMode as top-level
+                            var taskType = selectedParentId !== "" ? getChildTypeForParent(
+                                tasksData.find(function(t) { return t.id === selectedParentId }).type
+                            ) : currentMode
+                            
+                            taskManager.createTask(taskType, taskNameField.text, taskDescField.text, selectedParentId)
                             taskNameField.text = ""
                             taskDescField.text = ""
+                            selectedParentId = ""
                             addTaskDialog.close()
                             loadTasks()
                         }
@@ -502,6 +638,7 @@ Rectangle {
                         font.bold: true
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
+                        font.pixelSize: 14
                     }
                 }
             }
