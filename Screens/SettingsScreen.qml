@@ -33,7 +33,7 @@ Rectangle {
             Button {
                 Layout.preferredWidth: 100
                 Layout.preferredHeight: 40
-                text: "Back"
+                text: "← Back"
                 
                 contentItem: Text {
                     text: parent.text
@@ -67,21 +67,21 @@ Rectangle {
             // Title
             Text {
                 Layout.fillWidth: true
-                text: "Create New Project"
+                text: "Settings"
                 font.pixelSize: 32
                 font.bold: true
                 color: "white"
             }
         }
         
-        // Form container
+        // Settings container
         Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
             
             Rectangle {
-                width: 600
-                height: 600
+                width: 700
+                height: 500
                 anchors.centerIn: parent
                 color: Qt.rgba(0.08, 0.08, 0.12, 0.95)
                 radius: 24
@@ -113,121 +113,52 @@ Rectangle {
                             height: 80
                             radius: 40
                             gradient: Gradient {
-                                GradientStop { position: 0.0; color: "#6366f1" }
-                                GradientStop { position: 1.0; color: "#8b5cf6" }
+                                GradientStop { position: 0.0; color: "#f59e0b" }
+                                GradientStop { position: 1.0; color: "#d97706" }
                             }
                             
                             Text {
                                 anchors.centerIn: parent
-                                text: "+"
+                                text: "⚙"
                                 font.pixelSize: 48
-                                font.bold: true
                                 color: "white"
                             }
                         }
                         
                         Text {
                             Layout.alignment: Qt.AlignHCenter
-                            text: "Fill in the project details below"
+                            text: "Application Settings"
+                            font.pixelSize: 20
+                            font.bold: true
+                            color: "white"
+                        }
+                        
+                        Text {
+                            Layout.alignment: Qt.AlignHCenter
+                            text: "Configure workspace and preferences"
                             font.pixelSize: 14
                             color: "#94a3b8"
                         }
                     }
                     
-                    // Project Name field
+                    // Workspace Directory setting
                     ColumnLayout {
                         Layout.fillWidth: true
-                        spacing: 8
+                        spacing: 12
                         
                         Text {
-                            text: "Project Name"
-                            font.pixelSize: 13
+                            text: "Workspace Directory"
+                            font.pixelSize: 16
                             font.weight: Font.Medium
                             color: "#cbd5e1"
                         }
                         
-                        Rectangle {
+                        Text {
                             Layout.fillWidth: true
-                            Layout.preferredHeight: 48
-                            color: Qt.rgba(0.15, 0.15, 0.2, 0.6)
-                            radius: 12
-                            border.color: projectNameField.activeFocus ? "#6366f1" : Qt.rgba(0.3, 0.3, 0.4, 0.3)
-                            border.width: 2
-                            
-                            Behavior on border.color {
-                                ColorAnimation { duration: 200 }
-                            }
-                            
-                            TextField {
-                                id: projectNameField
-                                anchors.fill: parent
-                                anchors.margins: 2
-                                placeholderText: "Enter project name"
-                                placeholderTextColor: "#64748b"
-                                color: "white"
-                                font.pixelSize: 15
-                                leftPadding: 16
-                                background: Rectangle {
-                                    color: "transparent"
-                                }
-                                
-                                Keys.onReturnPressed: managerNameField.forceActiveFocus()
-                            }
-                        }
-                    }
-                    
-                    // Project Manager field
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: 8
-                        
-                        Text {
-                            text: "Project Manager"
-                            font.pixelSize: 13
-                            font.weight: Font.Medium
-                            color: "#cbd5e1"
-                        }
-                        
-                        Rectangle {
-                            Layout.fillWidth: true
-                            Layout.preferredHeight: 48
-                            color: Qt.rgba(0.15, 0.15, 0.2, 0.6)
-                            radius: 12
-                            border.color: managerNameField.activeFocus ? "#6366f1" : Qt.rgba(0.3, 0.3, 0.4, 0.3)
-                            border.width: 2
-                            
-                            Behavior on border.color {
-                                ColorAnimation { duration: 200 }
-                            }
-                            
-                            TextField {
-                                id: managerNameField
-                                anchors.fill: parent
-                                anchors.margins: 2
-                                placeholderText: "Enter project manager name"
-                                placeholderTextColor: "#64748b"
-                                color: "white"
-                                font.pixelSize: 15
-                                leftPadding: 16
-                                background: Rectangle {
-                                    color: "transparent"
-                                }
-                                
-                                Keys.onReturnPressed: createButton.clicked()
-                            }
-                        }
-                    }
-                    
-                    // Project Folder field
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: 8
-                        
-                        Text {
-                            text: "Project Folder"
-                            font.pixelSize: 13
-                            font.weight: Font.Medium
-                            color: "#cbd5e1"
+                            text: "All project folders will be created in this directory"
+                            font.pixelSize: 12
+                            color: "#94a3b8"
+                            wrapMode: Text.WordWrap
                         }
                         
                         RowLayout {
@@ -243,22 +174,18 @@ Rectangle {
                                 border.width: 2
                                 
                                 TextField {
-                                    id: projectFolderField
+                                    id: workspaceDirField
                                     anchors.fill: parent
                                     anchors.margins: 2
-                                    placeholderText: "Select project folder location"
+                                    placeholderText: "Select workspace directory"
                                     placeholderTextColor: "#64748b"
                                     color: "white"
-                                    font.pixelSize: 15
+                                    font.pixelSize: 14
                                     leftPadding: 16
                                     readOnly: true
+                                    text: settingsManager.workspaceDirectory
                                     background: Rectangle {
                                         color: "transparent"
-                                    }
-                                    
-                                    Component.onCompleted: {
-                                        // Set default folder path based on workspace and project name
-                                        updateDefaultFolder()
                                     }
                                 }
                             }
@@ -287,7 +214,7 @@ Rectangle {
                                 }
                                 
                                 onClicked: {
-                                    folderDialog.open()
+                                    workspaceFolderDialog.open()
                                 }
                                 
                                 MouseArea {
@@ -306,20 +233,26 @@ Rectangle {
                         Layout.preferredHeight: 20
                         text: ""
                         font.pixelSize: 13
-                        color: "#ef4444"
+                        color: "#22c55e"
                         horizontalAlignment: Text.AlignHCenter
                         wrapMode: Text.WordWrap
                     }
                     
-                    // Create button
+                    Item {
+                        Layout.fillHeight: true
+                        Layout.minimumHeight: 10
+                    }
+                    
+                    // Save button
                     Button {
-                        id: createButton
+                        id: saveButton
                         Layout.fillWidth: true
                         Layout.preferredHeight: 52
-                        text: "Create Project"
+                        Layout.alignment: Qt.AlignBottom
+                        text: "Save Settings"
                         
                         contentItem: Text {
-                            text: createButton.text
+                            text: saveButton.text
                             font.pixelSize: 16
                             font.bold: true
                             color: "white"
@@ -330,33 +263,25 @@ Rectangle {
                         background: Rectangle {
                             radius: 12
                             gradient: Gradient {
-                                GradientStop { position: 0.0; color: createButton.pressed ? "#5558e3" : "#6366f1" }
-                                GradientStop { position: 1.0; color: createButton.pressed ? "#7c3aed" : "#8b5cf6" }
+                                GradientStop { position: 0.0; color: saveButton.pressed ? "#d97706" : "#f59e0b" }
+                                GradientStop { position: 1.0; color: saveButton.pressed ? "#b45309" : "#d97706" }
                             }
                             
                             Behavior on scale {
                                 NumberAnimation { duration: 100 }
                             }
                             
-                            scale: createButton.pressed ? 0.98 : 1.0
+                            scale: saveButton.pressed ? 0.98 : 1.0
                         }
                         
                         onClicked: {
-                            if (projectNameField.text === "" || managerNameField.text === "") {
-                                statusMessage.text = "Please fill in all fields"
+                            if (workspaceDirField.text === "") {
+                                statusMessage.text = "Please select a workspace directory"
                                 statusMessage.color = "#ef4444"
                                 return
                             }
                             
-                            if (projectFolderField.text === "") {
-                                statusMessage.text = "Please select a project folder"
-                                statusMessage.color = "#ef4444"
-                                return
-                            }
-                            
-                            statusMessage.text = "Creating project..."
-                            statusMessage.color = "#3b82f6"
-                            projectManager.createProject(projectNameField.text, managerNameField.text, projectFolderField.text)
+                            settingsManager.setWorkspaceDirectory(workspaceDirField.text)
                         }
                         
                         MouseArea {
@@ -365,83 +290,51 @@ Rectangle {
                             onPressed: function(mouse) { mouse.accepted = false }
                         }
                     }
-                    
-                    Item {
-                        Layout.fillHeight: true
-                    }
                 }
             }
         }
     }
     
-    // Connections to ProjectManager
-    Connections {
-        target: projectManager
+    // Folder dialog for selecting workspace directory
+    FolderDialog {
+        id: workspaceFolderDialog
+        title: "Select Workspace Directory"
+        currentFolder: settingsManager.workspaceDirectory
         
-        function onProjectCreated(projectName, managerName, folderPath) {
-            statusMessage.text = "Project created successfully!"
+        onAccepted: {
+            workspaceDirField.text = workspaceFolderDialog.selectedFolder.toString().replace("file:///", "")
+        }
+    }
+    
+    // Connections to SettingsManager
+    Connections {
+        target: settingsManager
+        
+        function onSettingsSaved() {
+            statusMessage.text = "Settings saved successfully!"
             statusMessage.color = "#22c55e"
             
-            // Clear fields after successful creation
-            projectNameField.text = ""
-            managerNameField.text = ""
-            projectFolderField.text = ""
+            // Notify ProjectManager to refresh workspace directory
+            projectManager.refreshWorkspaceDirectory()
             
-            // Navigate back to home screen after a short delay
-            backTimer.start()
+            // Auto-hide message after 3 seconds
+            messageTimer.start()
         }
         
-        function onProjectCreationFailed(errorMessage) {
+        function onSettingsSaveFailed(errorMessage) {
             statusMessage.text = errorMessage
             statusMessage.color = "#ef4444"
         }
-        
-        function onProjectStatusChanged(status) {
-            if (status.indexOf("Creating") !== -1) {
-                statusMessage.text = status
-                statusMessage.color = "#3b82f6"
-            }
-        }
     }
     
-    // Folder dialog for selecting project location
-    FolderDialog {
-        id: folderDialog
-        title: "Select Project Folder"
-        currentFolder: projectManager.getWorkspaceDirectory()
-        
-        onAccepted: {
-            projectFolderField.text = folderDialog.selectedFolder.toString().replace("file:///", "")
-        }
-    }
-    
-    // Function to update default folder based on project name and workspace
-    function updateDefaultFolder() {
-        if (projectNameField.text !== "") {
-            var workspaceDir = projectManager.getWorkspaceDirectory()
-            var projectName = projectNameField.text.trim().replace(/[^a-zA-Z0-9]/g, "_")
-            projectFolderField.text = workspaceDir + "/" + projectName
-        }
-    }
-    
-    // Update folder when project name changes
-    Connections {
-        target: projectNameField
-        function onTextChanged() {
-            if (projectFolderField.text === "" || projectFolderField.text.indexOf(projectManager.getWorkspaceDirectory()) === 0) {
-                updateDefaultFolder()
-            }
-        }
-    }
-    
-    // Timer to go back to home screen after successful creation
+    // Timer to hide status message
     Timer {
-        id: backTimer
-        interval: 2000
+        id: messageTimer
+        interval: 3000
         running: false
         repeat: false
         onTriggered: {
-            screenLoader.loadHomeScreen()
+            statusMessage.text = ""
         }
     }
 }

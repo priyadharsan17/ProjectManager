@@ -9,6 +9,7 @@ from PySide6.QtCore import QUrl
 from Backend.LoginManager import LoginManager
 from Backend.ScreenLoader import ScreenLoader
 from Backend.ProjectManager import ProjectManager
+from Backend.SettingsManager import SettingsManager
 
 
 def main():
@@ -31,11 +32,13 @@ def main():
     login_manager = LoginManager()
     screen_loader = ScreenLoader()
     project_manager = ProjectManager()
+    settings_manager = SettingsManager()
     
     # Expose managers to QML
     engine.rootContext().setContextProperty("loginManager", login_manager)
     engine.rootContext().setContextProperty("screenLoader", screen_loader)
     engine.rootContext().setContextProperty("projectManager", project_manager)
+    engine.rootContext().setContextProperty("settingsManager", settings_manager)
     
     # Load the main QML file
     qml_file = Path(__file__).parent / "main.qml"

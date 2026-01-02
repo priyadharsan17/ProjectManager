@@ -369,8 +369,7 @@ Rectangle {
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
-                            console.log("Settings clicked")
-                            // TODO: Implement settings functionality
+                            screenLoader.loadScreen("Screens/SettingsScreen.qml")
                         }
                     }
                 }
