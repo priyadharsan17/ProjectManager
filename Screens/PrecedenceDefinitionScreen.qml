@@ -9,6 +9,7 @@ Rectangle {
     
     property string currentMode: "Epic"
     property var tasksData: []
+    property string selectedParentId: ""  // Track selected parent
     
     Component.onCompleted: {
         loadTasks()
@@ -33,25 +34,62 @@ Rectangle {
         // Show all tasks of the current mode type
         for (var i = 0; i < tasksData.length; i++) {
             var task = tasksData[i]
-            if (task.type === currentMode) {
-                // Get predecessor from PrecedenceManager
-                var predecessorValue = precedenceManager.getPredecessor(task.type, task.id)
-                
-                taskListModel.append({
-                    taskId: task.id,
-                    taskName: task.name,
-                    taskType: task.type,
-                    taskStatus: task.status,
-                    estimatedDays: task.estimated_days || 0,
-                    startDate: task.start_date || "",
-                    endDate: task.end_date || "",
-                    predecessor: predecessorValue || ""
-                })
+            
+            // Filter by type
+            if (task.type !== currentMode) continue
+            
+            // For non-Epic modes, filter by parent if selected
+            if (currentMode !== "Epic" && selectedParentId !== "") {
+                if (task.parent_id !== selectedParentId) continue
             }
+            
+            // Get predecessor from PrecedenceManager
+            var predecessorValue = precedenceManager.getPredecessor(task.type, task.id)
+            
+            taskListModel.append({
+                taskId: task.id,
+                taskName: task.name,
+                taskType: task.type,
+                taskStatus: task.status,
+                estimatedDays: task.estimated_days || 0,
+                startDate: task.start_date || "",
+                endDate: task.end_date || "",
+                predecessor: predecessorValue || ""
+            })
         }
         
         // Sort for link diagram view
         sortTasksForDiagram()
+    }
+    
+    function refreshParentList() {
+        parentListModel.clear()
+        
+        if (currentMode === "Epic") {
+            return  // Epic has no parent
+        }
+        
+        // Determine parent type
+        var parentType = ""
+        if (currentMode === "Feature") parentType = "Epic"
+        else if (currentMode === "PBI") parentType = "Feature"
+        else if (currentMode === "Task") parentType = "PBI"
+        
+        // Populate parent list
+        for (var i = 0; i < tasksData.length; i++) {
+            var task = tasksData[i]
+            if (task.type === parentType) {
+                parentListModel.append({
+                    id: task.id,
+                    name: task.name
+                })
+            }
+        }
+        
+        // Reset selection
+        if (parentListModel.count > 0) {
+            parentSelectorCombo.currentIndex = 0
+        }
     }
     
     function sortTasksForDiagram() {
@@ -236,7 +274,7 @@ Rectangle {
                     anchors.margins: 20
                     spacing: 15
                     
-                    RowLayout {
+                    ColumnLayout {
                         Layout.fillWidth: true
                         spacing: 10
                         
@@ -311,7 +349,82 @@ Rectangle {
                             
                             onCurrentTextChanged: {
                                 currentMode = currentText
+                                selectedParentId = ""  // Reset parent selection
+                                refreshParentList()
                                 refreshTaskList()
+                            }
+                        }
+                        
+                        // Parent Selector (visible for non-Epic modes)
+                        ComboBox {
+                            id: parentSelectorCombo
+                            Layout.preferredWidth: 200
+                            Layout.preferredHeight: 36
+                            visible: currentMode !== "Epic"
+                            enabled: parentListModel.count > 0
+                            
+                            model: ListModel { id: parentListModel }
+                            textRole: "name"
+                            
+                            displayText: currentIndex >= 0 ? model.get(currentIndex).name : "Select Parent"
+                            
+                            contentItem: Text {
+                                text: parentSelectorCombo.displayText
+                                font.pixelSize: 12
+                                color: "white"
+                                verticalAlignment: Text.AlignVCenter
+                                leftPadding: 12
+                                elide: Text.ElideRight
+                            }
+                            
+                            background: Rectangle {
+                                radius: 10
+                                color: parent.enabled ? "#374151" : "#1f2937"
+                                border.color: "#4b5563"
+                                border.width: 1
+                            }
+                            
+                            delegate: ItemDelegate {
+                                width: parentSelectorCombo.width
+                                
+                                contentItem: Text {
+                                    text: model.name
+                                    font.pixelSize: 12
+                                    color: "white"
+                                    verticalAlignment: Text.AlignVCenter
+                                }
+                                
+                                background: Rectangle {
+                                    color: parent.highlighted ? "#4b5563" : "#1f2937"
+                                }
+                            }
+                            
+                            popup: Popup {
+                                y: parentSelectorCombo.height
+                                width: parentSelectorCombo.width
+                                padding: 0
+                                
+                                contentItem: ListView {
+                                    clip: true
+                                    implicitHeight: Math.min(contentHeight, 200)
+                                    model: parentSelectorCombo.popup.visible ? parentSelectorCombo.delegateModel : null
+                                    currentIndex: parentSelectorCombo.highlightedIndex
+                                    ScrollBar.vertical: ScrollBar {}
+                                }
+                                
+                                background: Rectangle {
+                                    color: "#1f2937"
+                                    radius: 10
+                                    border.color: "#374151"
+                                    border.width: 1
+                                }
+                            }
+                            
+                            onCurrentIndexChanged: {
+                                if (currentIndex >= 0 && model.count > 0) {
+                                    selectedParentId = model.get(currentIndex).id
+                                    refreshTaskList()
+                                }
                             }
                         }
                     }
