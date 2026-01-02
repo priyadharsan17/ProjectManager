@@ -149,8 +149,7 @@ Rectangle {
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
-                            console.log("Precedence Definition clicked - Coming soon!")
-                            // TODO: Implement Precedence Definition screen
+                            screenLoader.loadScreen("Screens/PrecedenceDefinitionScreen.qml")
                         }
                     }
                 }
