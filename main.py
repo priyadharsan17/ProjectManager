@@ -5,9 +5,10 @@ from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtCore import QUrl
 
-# Import the LoginManager backend
+# Import backend managers
 from Backend.LoginManager import LoginManager
 from Backend.ScreenLoader import ScreenLoader
+from Backend.ProjectManager import ProjectManager
 
 
 def main():
@@ -26,15 +27,15 @@ def main():
     # Create QML engine
     engine = QQmlApplicationEngine()
     
-    # Create LoginManager instance
+    # Create backend manager instances
     login_manager = LoginManager()
-    
-    # Create ScreenLoader instance
     screen_loader = ScreenLoader()
+    project_manager = ProjectManager()
     
-    # Expose LoginManager and ScreenLoader to QML
+    # Expose managers to QML
     engine.rootContext().setContextProperty("loginManager", login_manager)
     engine.rootContext().setContextProperty("screenLoader", screen_loader)
+    engine.rootContext().setContextProperty("projectManager", project_manager)
     
     # Load the main QML file
     qml_file = Path(__file__).parent / "main.qml"

@@ -207,8 +207,7 @@ Rectangle {
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
-                            console.log("Create Project clicked")
-                            // TODO: Implement create project functionality
+                            screenLoader.loadScreen("Screens/CreateProjectScreen.qml")
                         }
                     }
                 }
