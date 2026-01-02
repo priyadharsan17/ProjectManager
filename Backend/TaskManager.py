@@ -66,6 +66,7 @@ class TaskManager(QObject):
                                     "parent_id": task_data.get("Parent", ""),
                                     "status": task_data.get("Status", "ToDo"),
                                     "created_date": task_data.get("CreatedDate", ""),
+                                    "estimated_days": task_data.get("EstimatedDays", 0),
                                     "start_date": task_data.get("StartDate", ""),
                                     "end_date": task_data.get("EndDate", ""),
                                     "progress": task_data.get("Progress", 0),
@@ -134,6 +135,7 @@ class TaskManager(QObject):
                             "Parent": task.get("parent_id", ""),
                             "Status": task.get("status", "ToDo"),
                             "CreatedDate": task.get("created_date", ""),
+                            "EstimatedDays": task.get("estimated_days", 0),
                             "StartDate": task.get("start_date", ""),
                             "EndDate": task.get("end_date", ""),
                             "Progress": task.get("progress", 0)
@@ -149,8 +151,8 @@ class TaskManager(QObject):
             print(f"Error saving tasks: {e}")
             return False
     
-    @Slot(str, str, str, str)
-    def createTask(self, task_type, task_name, description, parent_id):
+    @Slot(str, str, str, str, str, str, str)
+    def createTask(self, task_type, task_name, description, parent_id, estimated_days="0", start_date="", end_date=""):
         """
         Create a new task.
         
@@ -159,6 +161,9 @@ class TaskManager(QObject):
             task_name: Name of the task
             description: Task description
             parent_id: ID of parent task (empty for Epic)
+            estimated_days: Estimated work days for the task
+            start_date: Start date (YYYY-MM-DD format)
+            end_date: End date (YYYY-MM-DD format)
         """
         if not task_name or not task_name.strip():
             return
@@ -174,8 +179,9 @@ class TaskManager(QObject):
             "parent_id": parent_id if parent_id else "",
             "status": "Not Started",
             "created_date": datetime.now().isoformat(),
-            "start_date": "",
-            "end_date": "",
+            "estimated_days": int(estimated_days) if estimated_days else 0,
+            "start_date": start_date if start_date else "",
+            "end_date": end_date if end_date else "",
             "progress": 0,
             "children": []
         }

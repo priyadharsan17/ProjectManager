@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Effects
+import "../Components"
 
 Rectangle {
     id: root
@@ -530,9 +531,28 @@ Rectangle {
         modal: true
         anchors.centerIn: parent
         width: 450
-        height: 400
+        height: 620
         
         property string dialogTitle: "Add " + currentMode
+        
+        function calculateEndDate(startDateStr, estimatedDays) {
+            if (!startDateStr || !estimatedDays || estimatedDays <= 0) return ""
+            
+            var startDate = new Date(startDateStr)
+            var daysAdded = 0
+            var currentDate = new Date(startDate)
+            
+            while (daysAdded < estimatedDays) {
+                currentDate.setDate(currentDate.getDate() + 1)
+                // Skip weekends (0 = Sunday, 6 = Saturday)
+                var dayOfWeek = currentDate.getDay()
+                if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+                    daysAdded++
+                }
+            }
+            
+            return Qt.formatDate(currentDate, "yyyy-MM-dd")
+        }
         
         header: Rectangle {
             width: parent.width
@@ -598,7 +618,7 @@ Rectangle {
                 
                 ScrollView {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 100
+                    Layout.preferredHeight: 80
                     clip: true
                     
                     TextArea {
@@ -612,6 +632,161 @@ Rectangle {
                         background: Rectangle {
                             color: "#374151"
                             radius: 6
+                        }
+                    }
+                }
+                
+                Text {
+                    text: "Estimated Days (work days):"
+                    font.pixelSize: 14
+                    color: "white"
+                }
+                
+                TextField {
+                    id: estimatedDaysField
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 40
+                    placeholderText: "Enter estimated work days"
+                    color: "white"
+                    leftPadding: 12
+                    rightPadding: 12
+                    validator: IntValidator { bottom: 0; top: 999 }
+                    
+                    background: Rectangle {
+                        color: "#374151"
+                        radius: 6
+                    }
+                    
+                    onTextChanged: {
+                        if (text && startDateField.text) {
+                            var calculated = addTaskDialog.calculateEndDate(startDateField.text, parseInt(text))
+                            if (calculated) {
+                                endDateField.text = calculated
+                            }
+                        }
+                    }
+                }
+                
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 10
+                    
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 5
+                        
+                        Text {
+                            text: "Start Date:"
+                            font.pixelSize: 14
+                            color: "white"
+                        }
+                        
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 5
+                            
+                            TextField {
+                                id: startDateField
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 40
+                                placeholderText: "YYYY-MM-DD"
+                                color: "white"
+                                leftPadding: 12
+                                rightPadding: 12
+                                readOnly: true
+                                
+                                background: Rectangle {
+                                    color: "#374151"
+                                    radius: 6
+                                }
+                                
+                                onTextChanged: {
+                                    if (text && estimatedDaysField.text) {
+                                        var estimated = parseInt(estimatedDaysField.text)
+                                        if (estimated > 0) {
+                                            var calculated = addTaskDialog.calculateEndDate(text, estimated)
+                                            if (calculated) {
+                                                endDateField.text = calculated
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            Button {
+                                Layout.preferredWidth: 40
+                                Layout.preferredHeight: 40
+                                text: "📅"
+                                
+                                contentItem: Text {
+                                    text: parent.text
+                                    font.pixelSize: 18
+                                    horizontalAlignment: Text.AlignHCenter
+                                    verticalAlignment: Text.AlignVCenter
+                                }
+                                
+                                background: Rectangle {
+                                    color: parent.hovered ? "#4b5563" : "#374151"
+                                    radius: 6
+                                }
+                                
+                                onClicked: startDateDialog.open()
+                            }
+                        }
+                    }
+                    
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 5
+                        
+                        Text {
+                            text: "End Date:"
+                            font.pixelSize: 14
+                            color: "white"
+                        }
+                        
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 5
+                            
+                            TextField {
+                                id: endDateField
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 40
+                                placeholderText: "YYYY-MM-DD"
+                                color: "white"
+                                leftPadding: 12
+                                rightPadding: 12
+                                readOnly: true
+                                enabled: !estimatedDaysField.text || estimatedDaysField.text === ""
+                                
+                                background: Rectangle {
+                                    color: enabled ? "#374151" : "#2d3748"
+                                    radius: 6
+                                }
+                            }
+                            
+                            Button {
+                                Layout.preferredWidth: 40
+                                Layout.preferredHeight: 40
+                                text: "📅"
+                                enabled: !estimatedDaysField.text || estimatedDaysField.text === ""
+                                
+                                contentItem: Text {
+                                    text: parent.text
+                                    font.pixelSize: 18
+                                    horizontalAlignment: Text.AlignHCenter
+                                    verticalAlignment: Text.AlignVCenter
+                                    opacity: parent.enabled ? 1.0 : 0.4
+                                }
+                                
+                                background: Rectangle {
+                                    color: parent.enabled ? (parent.hovered ? "#4b5563" : "#374151") : "#2d3748"
+                                    radius: 6
+                                }
+                                
+                                onClicked: endDateDialog.open()
+                            }
                         }
                     }
                 }
@@ -631,6 +806,9 @@ Rectangle {
                         onClicked: {
                             taskNameField.text = ""
                             taskDescField.text = ""
+                            estimatedDaysField.text = ""
+                            startDateField.text = ""
+                            endDateField.text = ""
                             selectedParentId = ""
                             addTaskDialog.close()
                         }
@@ -660,9 +838,20 @@ Rectangle {
                                     tasksData.find(function(t) { return t.id === selectedParentId }).type
                                 ) : currentMode
                                 
-                                taskManager.createTask(taskType, taskNameField.text, taskDescField.text, selectedParentId)
+                                taskManager.createTask(
+                                    taskType, 
+                                    taskNameField.text, 
+                                    taskDescField.text, 
+                                    selectedParentId,
+                                    estimatedDaysField.text || "0",
+                                    startDateField.text || "",
+                                    endDateField.text || ""
+                                )
                                 taskNameField.text = ""
                                 taskDescField.text = ""
+                                estimatedDaysField.text = ""
+                                startDateField.text = ""
+                                endDateField.text = ""
                                 selectedParentId = ""
                                 addTaskDialog.close()
                                 loadTasks()
@@ -685,6 +874,28 @@ Rectangle {
                     }
                 }
             }
+        }
+    }
+    
+    // Start Date Calendar
+    Calendar {
+        id: startDateDialog
+        title: "Select Start Date"
+        anchors.centerIn: parent
+        
+        onDateSelected: function(date) {
+            startDateField.text = date
+        }
+    }
+    
+    // End Date Calendar
+    Calendar {
+        id: endDateDialog
+        title: "Select End Date"
+        anchors.centerIn: parent
+        
+        onDateSelected: function(date) {
+            endDateField.text = date
         }
     }
     
