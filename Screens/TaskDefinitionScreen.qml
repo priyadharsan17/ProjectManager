@@ -125,6 +125,14 @@ Rectangle {
         return ""
     }
     
+    function getColorForTaskType(taskType) {
+        if (taskType === "Epic") return "#8b5cf6"      // Purple
+        if (taskType === "Feature") return "#3b82f6"   // Blue
+        if (taskType === "PBI") return "#10b981"       // Green
+        if (taskType === "Task") return "#f59e0b"      // Amber
+        return "#6b7280"                                 // Gray
+    }
+    
     function collapseAll() {
         // Set all items to not expanded
         for (var i = 0; i < taskListModel.count; i++) {
@@ -367,11 +375,17 @@ Rectangle {
                             height: 80
                             color: Qt.rgba(0.15, 0.15, 0.2, 0.6)
                             radius: 12
-                            border.color: taskMouseArea.containsMouse ? "#6366f1" : "transparent"
-                            border.width: 2
+                            border.color: taskMouseArea.containsMouse ? getColorForTaskType(model.taskType) : "transparent"
+                            border.width: 3
                             
-                            // Indent based on level
-                            x: model.level * 40
+                            // Left color indicator strip
+                            Rectangle {
+                                width: 6
+                                height: parent.height
+                                anchors.left: parent.left
+                                radius: 12
+                                color: getColorForTaskType(model.taskType)
+                            }
                             
                             Behavior on border.color { ColorAnimation { duration: 200 } }
                             
@@ -385,20 +399,23 @@ Rectangle {
                                     Layout.preferredWidth: 32
                                     Layout.preferredHeight: 32
                                     radius: 16
-                                    color: model.hasChildren ? Qt.rgba(0.3, 0.3, 0.4, 0.5) : "transparent"
-                                    visible: model.hasChildren
+                                    color: model.hasChildren ? Qt.rgba(0.3, 0.3, 0.4, 0.5) : Qt.rgba(0.2, 0.2, 0.25, 0.3)
+                                    visible: true
                                     
                                     Text {
                                         anchors.centerIn: parent
                                         text: model.isExpanded ? "▼" : "▶"
                                         font.pixelSize: 14
-                                        color: "white"
+                                        color: model.hasChildren ? "white" : "#6b7280"
+                                        opacity: model.hasChildren ? 1.0 : 0.5
                                     }
                                     
                                     MouseArea {
                                         anchors.fill: parent
-                                        cursorShape: Qt.PointingHandCursor
+                                        cursorShape: model.hasChildren ? Qt.PointingHandCursor : Qt.ArrowCursor
                                         onClicked: {
+                                            if (!model.hasChildren) return
+                                            
                                             var expanded = !model.isExpanded
                                             taskListModel.setProperty(index, "isExpanded", expanded)
                                             
