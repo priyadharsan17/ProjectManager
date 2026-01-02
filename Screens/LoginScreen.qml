@@ -280,6 +280,9 @@ Rectangle {
             // Clear fields after successful login
             usernameField.text = ""
             passwordField.text = ""
+            
+            // Load home screen after successful login
+            screenLoader.loadHomeScreen()
         }
         
         function onLoginFailed(errorMessage) {

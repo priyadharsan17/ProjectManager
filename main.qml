@@ -138,4 +138,13 @@ ApplicationWindow {
     function loadScreen(screenPath) {
         contentLoader.source = screenPath
     }
+    
+    // Connection to ScreenLoader for managing screen transitions
+    Connections {
+        target: screenLoader
+        
+        function onScreenChanged(screenPath) {
+            contentLoader.source = screenPath
+        }
+    }
 }

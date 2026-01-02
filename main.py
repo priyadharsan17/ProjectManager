@@ -7,6 +7,7 @@ from PySide6.QtCore import QUrl
 
 # Import the LoginManager backend
 from Backend.LoginManager import LoginManager
+from Backend.ScreenLoader import ScreenLoader
 
 
 def main():
@@ -28,8 +29,12 @@ def main():
     # Create LoginManager instance
     login_manager = LoginManager()
     
-    # Expose LoginManager to QML
+    # Create ScreenLoader instance
+    screen_loader = ScreenLoader()
+    
+    # Expose LoginManager and ScreenLoader to QML
     engine.rootContext().setContextProperty("loginManager", login_manager)
+    engine.rootContext().setContextProperty("screenLoader", screen_loader)
     
     # Load the main QML file
     qml_file = Path(__file__).parent / "main.qml"

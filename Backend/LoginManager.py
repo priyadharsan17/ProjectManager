@@ -11,6 +11,8 @@ class LoginManager(QObject):
     loginSuccess = Signal(str)  # Emits username on successful login
     loginFailed = Signal(str)   # Emits error message on failed login
     loginStatusChanged = Signal(str)  # Emits status messages
+    isLoggedInChanged = Signal()  # Emits when login status changes
+    currentUserChanged = Signal()  # Emits when current user changes
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -42,11 +44,15 @@ class LoginManager(QObject):
         if username == "admin" and password == "admin123":
             self._is_logged_in = True
             self._current_user = username
+            self.isLoggedInChanged.emit()
+            self.currentUserChanged.emit()
             self.loginSuccess.emit(username)
             self.loginStatusChanged.emit(f"Welcome, {username}!")
         elif username == "demo" and password == "demo123":
             self._is_logged_in = True
             self._current_user = username
+            self.isLoggedInChanged.emit()
+            self.currentUserChanged.emit()
             self.loginSuccess.emit(username)
             self.loginStatusChanged.emit(f"Welcome, {username}!")
         else:
@@ -57,14 +63,16 @@ class LoginManager(QObject):
         """Log out the current user."""
         self._is_logged_in = False
         self._current_user = ""
+        self.isLoggedInChanged.emit()
+        self.currentUserChanged.emit()
         self.loginStatusChanged.emit("Logged out successfully")
     
-    @Property(bool)
+    @Property(bool, notify=isLoggedInChanged)
     def isLoggedIn(self):
         """Property to check if a user is currently logged in."""
         return self._is_logged_in
     
-    @Property(str)
+    @Property(str, notify=currentUserChanged)
     def currentUser(self):
         """Property to get the current logged-in username."""
         return self._current_user
