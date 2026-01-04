@@ -989,4 +989,14 @@ Rectangle {
             loadTasks()
         }
     }
+    
+    // Connections to PrecedenceManager for date updates
+    Connections {
+        target: precedenceManager
+        
+        function onTaskDatesUpdated(taskType, taskId, startDate, endDate) {
+            // Reload tasks to reflect updated dates
+            loadTasks()
+        }
+    }
 }
