@@ -40,6 +40,7 @@ def main():
     
     # Connect TaskManager with PrecedenceManager
     precedence_manager.set_task_manager(task_manager)
+    task_manager.set_precedence_manager(precedence_manager)
     
     # Expose managers to QML
     engine.rootContext().setContextProperty("loginManager", login_manager)
