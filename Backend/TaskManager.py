@@ -27,6 +27,11 @@ class TaskManager(QObject):
             "PBI": [],
             "Task": []
         }
+        self._precedence_manager = None
+    
+    def set_precedence_manager(self, precedence_manager):
+        """Set reference to PrecedenceManager for cleanup on delete"""
+        self._precedence_manager = precedence_manager
     
     @Slot(str)
     def loadProjectTasks(self, project_folder_path):
@@ -272,6 +277,16 @@ class TaskManager(QObject):
             return descendants
         
         ids_to_delete = get_all_descendants(task_id)
+        
+        # Delete precedence entries for all tasks being deleted
+        if self._precedence_manager:
+            for tid in ids_to_delete:
+                # Find the task type
+                for task in self._tasks:
+                    if task.get("id") == tid:
+                        task_type = task.get("type")
+                        self._precedence_manager.deletePrecedence(task_type, tid)
+                        break
         
         # Remove all tasks with these IDs
         self._tasks = [task for task in self._tasks if task.get("id") not in ids_to_delete]

@@ -264,3 +264,21 @@ class PrecedenceManager(QObject):
         
         # Save the updated tasks
         self.task_manager._save_tasks()
+    
+    @Slot(str, str)
+    def deletePrecedence(self, task_type, task_id):
+        """Delete precedence entry for a task and clean up references to it"""
+        if task_type not in self.precedence_data:
+            return
+        
+        # Remove the task's own precedence entry
+        if task_id in self.precedence_data[task_type]:
+            del self.precedence_data[task_type][task_id]
+        
+        # Remove any references to this task as a predecessor
+        for tid, pred in list(self.precedence_data[task_type].items()):
+            if pred == task_id:
+                self.precedence_data[task_type][tid] = ""
+        
+        # Save the updated precedence data
+        self._save_precedence(task_type)
