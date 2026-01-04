@@ -43,8 +43,8 @@ Rectangle {
                 if (task.parent_id !== selectedParentId) continue
             }
             
-            // Get predecessor from PrecedenceManager
-            var predecessorValue = precedenceManager.getPredecessor(task.type, task.id)
+            // Get predecessor ID from PrecedenceManager
+            var predecessorId = precedenceManager.getPredecessor(task.type, task.id)
             
             taskListModel.append({
                 taskId: task.id,
@@ -54,8 +54,23 @@ Rectangle {
                 estimatedDays: task.estimated_days || 0,
                 startDate: task.start_date || "",
                 endDate: task.end_date || "",
-                predecessor: predecessorValue || ""
+                predecessor: "",
+                predecessorId: predecessorId || ""
             })
+        }
+        
+        // Convert predecessor IDs to row numbers for display
+        for (var j = 0; j < taskListModel.count; j++) {
+            var item = taskListModel.get(j)
+            if (item.predecessorId) {
+                // Find the row number of the predecessor task
+                for (var k = 0; k < taskListModel.count; k++) {
+                    if (taskListModel.get(k).taskId === item.predecessorId) {
+                        item.predecessor = k.toString()
+                        break
+                    }
+                }
+            }
         }
         
         // Sort for link diagram view
@@ -764,12 +779,23 @@ Rectangle {
                                                             // Save predecessor when user finishes editing
                                                             var taskId = model.taskId
                                                             var taskType = model.taskType
-                                                            var predecessorValue = text.trim()
+                                                            var predecessorRowNum = text.trim()
                                                             
-                                                            precedenceManager.setPredecessor(taskType, taskId, predecessorValue)
+                                                            // Convert row number to task ID
+                                                            var predecessorId = ""
+                                                            if (predecessorRowNum !== "") {
+                                                                var rowNum = parseInt(predecessorRowNum)
+                                                                if (!isNaN(rowNum) && rowNum >= 0 && rowNum < taskListModel.count) {
+                                                                    predecessorId = taskListModel.get(rowNum).taskId
+                                                                    console.log("Converting row", rowNum, "to ID", predecessorId)
+                                                                }
+                                                            }
                                                             
-                                                            // Update model
-                                                            model.predecessor = predecessorValue
+                                                            precedenceManager.setPredecessor(taskType, taskId, predecessorId)
+                                                            
+                                                            // Update model to show row number and store ID
+                                                            model.predecessor = predecessorRowNum
+                                                            model.predecessorId = predecessorId
                                                             
                                                             // Refresh link diagram sorting
                                                             sortTasksForDiagram()
