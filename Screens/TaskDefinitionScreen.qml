@@ -504,6 +504,35 @@ Rectangle {
                                         }
                                     }
                                 }
+                                
+                                // Delete button
+                                Rectangle {
+                                    Layout.preferredWidth: 36
+                                    Layout.preferredHeight: 36
+                                    radius: 18
+                                    color: deleteMouseArea.containsMouse ? "#ef4444" : Qt.rgba(0.94, 0.27, 0.27, 0.3)
+                                    
+                                    Behavior on color { ColorAnimation { duration: 200 } }
+                                    
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "🗑"
+                                        font.pixelSize: 18
+                                    }
+                                    
+                                    MouseArea {
+                                        id: deleteMouseArea
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            deleteConfirmDialog.taskIdToDelete = model.taskId
+                                            deleteConfirmDialog.taskNameToDelete = model.taskName
+                                            deleteConfirmDialog.taskTypeToDelete = model.taskType
+                                            deleteConfirmDialog.open()
+                                        }
+                                    }
+                                }
                             }
                             
                             MouseArea {
@@ -899,11 +928,172 @@ Rectangle {
         }
     }
     
+    // Delete Confirmation Dialog
+    Dialog {
+        id: deleteConfirmDialog
+        anchors.centerIn: parent
+        width: 450
+        height: 310
+        modal: true
+        padding: 0
+        clip: true
+        
+        property string taskIdToDelete: ""
+        property string taskNameToDelete: ""
+        property string taskTypeToDelete: ""
+        
+        header: Rectangle {
+            width: deleteConfirmDialog.width
+            height: 60
+            color: "#1f2937"
+            
+            RowLayout {
+                anchors.fill: parent
+                anchors.margins: 20
+                spacing: 15
+                
+                Text {
+                    text: "🗑"
+                    font.pixelSize: 24
+                }
+                
+                Text {
+                    Layout.fillWidth: true
+                    text: "Delete " + deleteConfirmDialog.taskTypeToDelete
+                    font.pixelSize: 20
+                    font.bold: true
+                    color: "white"
+                    elide: Text.ElideRight
+                }
+            }
+        }
+        
+        background: Rectangle {
+            color: "#111827"
+            radius: 12
+            border.color: "#ef4444"
+            border.width: 2
+        }
+        
+        contentItem: Item {
+            implicitWidth: 450
+            implicitHeight: 250
+            
+            ColumnLayout {
+                anchors.fill: parent
+                spacing: 0
+                
+                Item {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 180
+                    
+                    ColumnLayout {
+                        anchors.fill: parent
+                        anchors.margins: 20
+                        spacing: 15
+                        
+                        Text {
+                            Layout.fillWidth: true
+                            text: "Are you sure you want to delete:"
+                            font.pixelSize: 14
+                            color: "#9ca3af"
+                            wrapMode: Text.WordWrap
+                        }
+                        
+                        Text {
+                            Layout.fillWidth: true
+                            text: '"' + deleteConfirmDialog.taskNameToDelete + '"'
+                            font.pixelSize: 16
+                            font.bold: true
+                            color: "white"
+                            wrapMode: Text.WordWrap
+                        }
+                        
+                        Text {
+                            Layout.fillWidth: true
+                            text: "⚠️ This will also delete all child items recursively."
+                            font.pixelSize: 13
+                            color: "#fbbf24"
+                            wrapMode: Text.WordWrap
+                        }
+                    }
+                }
+                
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 70
+                    color: "#1f2937"
+                    
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.margins: 15
+                        spacing: 10
+                    
+                    Item { Layout.fillWidth: true }
+                    
+                    Button {
+                        Layout.preferredWidth: 100
+                        Layout.preferredHeight: 40
+                        text: "Cancel"
+                        
+                        contentItem: Text {
+                            text: parent.text
+                            font.pixelSize: 13
+                            color: "white"
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        
+                        background: Rectangle {
+                            radius: 8
+                            color: parent.pressed ? "#4b5563" : (parent.hovered ? "#6b7280" : "#374151")
+                            Behavior on color { ColorAnimation { duration: 200 } }
+                        }
+                        
+                        onClicked: deleteConfirmDialog.close()
+                    }
+                    
+                    Button {
+                        Layout.preferredWidth: 100
+                        Layout.preferredHeight: 40
+                        text: "Delete"
+                        
+                        contentItem: Text {
+                            text: parent.text
+                            font.pixelSize: 13
+                            font.bold: true
+                            color: "white"
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        
+                        background: Rectangle {
+                            radius: 8
+                            color: parent.pressed ? "#dc2626" : (parent.hovered ? "#ef4444" : "#f87171")
+                            Behavior on color { ColorAnimation { duration: 200 } }
+                        }
+                        
+                        onClicked: {
+                            taskManager.deleteTask(deleteConfirmDialog.taskIdToDelete)
+                            deleteConfirmDialog.close()
+                            loadTasks()
+                        }
+                    }
+                    }  // Close RowLayout
+                }  // Close Rectangle
+            }  // Close ColumnLayout
+        }  // Close Item (contentItem)
+    }  // Close Dialog
+    
     // Connections to TaskManager
     Connections {
         target: taskManager
         
         function onTaskCreated() {
+            loadTasks()
+        }
+        
+        function onTaskDeleted() {
             loadTasks()
         }
     }

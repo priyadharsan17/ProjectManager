@@ -224,8 +224,7 @@ Rectangle {
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
-                            console.log("Chart clicked - Coming soon!")
-                            // TODO: Implement Chart visualization screen
+                            screenLoader.loadScreen("Screens/ChartViewScreen.qml")
                         }
                     }
                 }

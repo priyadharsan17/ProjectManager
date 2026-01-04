@@ -249,3 +249,42 @@ class TaskManager(QObject):
                 self._save_tasks()
                 self.taskUpdated.emit(task_id)
                 break
+    
+    @Slot(str)
+    def deleteTask(self, task_id):
+        """Delete a task and all its children recursively."""
+        # Find the task to delete
+        task_to_delete = None
+        for task in self._tasks:
+            if task.get("id") == task_id:
+                task_to_delete = task
+                break
+        
+        if not task_to_delete:
+            return
+        
+        # Collect all descendant IDs recursively
+        def get_all_descendants(tid):
+            descendants = [tid]
+            for task in self._tasks:
+                if task.get("parent_id") == tid:
+                    descendants.extend(get_all_descendants(task.get("id")))
+            return descendants
+        
+        ids_to_delete = get_all_descendants(task_id)
+        
+        # Remove all tasks with these IDs
+        self._tasks = [task for task in self._tasks if task.get("id") not in ids_to_delete]
+        
+        # Update parent's children list if this task had a parent
+        if task_to_delete.get("parent_id"):
+            for task in self._tasks:
+                if task.get("id") == task_to_delete.get("parent_id"):
+                    if "children" in task and task_id in task["children"]:
+                        task["children"].remove(task_id)
+                    break
+        
+        # Save and emit signal
+        self._save_tasks()
+        self._build_hierarchy()
+        self.taskDeleted.emit(task_id)
