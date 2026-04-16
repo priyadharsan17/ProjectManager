@@ -7,6 +7,7 @@ from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtCore import QUrl
 
 from Backend.LoginManager import LoginManager
+from Backend.ScreenLoader import ScreenLoader
 
 def main():
     """
@@ -28,7 +29,9 @@ def main():
 
     # Create and expose the LoginManager to QML
     login_manager = LoginManager()
+    screen_loader = ScreenLoader()
 
+    engine.rootContext().setContextProperty("screenLoader", screen_loader)
     engine.rootContext().setContextProperty("loginManager", login_manager)
 
     # Prefer loading QML from resources (qrc). If compiled resources module

@@ -2,6 +2,7 @@
     <qresource prefix="/">
         <file>Screens/LoginScreen.qml</file>
         <file>Screens/Theme.qml</file>
+        <file>Screens/HomeScreen.qml</file>
     </qresource>
     <qresource prefix="/">
         <file>main.qml</file>

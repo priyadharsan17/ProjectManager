@@ -21,7 +21,7 @@ ApplicationWindow {
         Loader { 
         id: contentLoader
         anchors.fill: parent
-            source: "qrc:/Screens/LoginScreen.qml"
+        source: screenLoader.currentScreen
     }
 
     // Optional: Add window controls for frameless window
@@ -133,6 +133,20 @@ ApplicationWindow {
                     onClicked: Qt.quit()
                 }
             }
+        }
+    }
+
+    // Function to switch screens
+    function loadScreen(screenPath) {
+        contentLoader.source = screenPath
+    }
+    
+    // Connection to ScreenLoader for managing screen transitions
+    Connections {
+        target: screenLoader
+        
+        function onScreenChanged(screenPath) {
+            contentLoader.source = screenPath
         }
     }
    
