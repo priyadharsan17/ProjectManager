@@ -1,0 +1,9 @@
+<RCC version="1.0">
+    <qresource prefix="/">
+        <file>Screens/LoginScreen.qml</file>
+        <file>Screens/Theme.qml</file>
+    </qresource>
+    <qresource prefix="/">
+        <file>main.qml</file>
+    </qresource>
+</RCC>

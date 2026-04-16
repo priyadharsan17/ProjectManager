@@ -11,17 +11,17 @@ ApplicationWindow {
     minimumHeight: 600
     title: "Project Manager"
     
-    Loader { id: themeLoader; source: "Screens/Theme.qml"; asynchronous: false }
+    Loader { id: themeLoader; source: "qrc:/Screens/Theme.qml"; asynchronous: false }
 
     // Remove default window frame for modern look (optional)
     flags: Qt.Window | Qt.FramelessWindowHint
     color: "transparent"
     
     // Main content loader
-    Loader {
+        Loader { 
         id: contentLoader
         anchors.fill: parent
-        source: "Screens/LoginScreen.qml"
+            source: "qrc:/Screens/LoginScreen.qml"
     }
 
     // Optional: Add window controls for frameless window

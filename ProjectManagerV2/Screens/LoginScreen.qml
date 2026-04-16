@@ -5,7 +5,7 @@ import QtQuick.Effects
 
 Rectangle {
     id: root
-    Loader { id: themeLoader; source: "Theme.qml"; asynchronous: false }
+    Loader { id: themeLoader; source: "qrc:/Screens/Theme.qml"; asynchronous: false }
     color: themeLoader.item.rootBackground
     
     // Animated gradient background
