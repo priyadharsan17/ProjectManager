@@ -11,6 +11,8 @@ ApplicationWindow {
     minimumHeight: 600
     title: "Project Manager"
     
+    Loader { id: themeLoader; source: "Screens/Theme.qml"; asynchronous: false }
+
     // Remove default window frame for modern look (optional)
     flags: Qt.Window | Qt.FramelessWindowHint
     color: "transparent"
@@ -114,7 +116,7 @@ ApplicationWindow {
                 width: 32
                 height: 32
                 radius: 6
-                color: closeArea.containsMouse ? "#ef4444" : "transparent"
+                color: closeArea.containsMouse ? themeLoader.item.error : "transparent"
                 
                 Text {
                     anchors.centerIn: parent

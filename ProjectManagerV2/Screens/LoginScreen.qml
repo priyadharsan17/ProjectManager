@@ -5,15 +5,16 @@ import QtQuick.Effects
 
 Rectangle {
     id: root
-    color: "#0a0a0a"
+    Loader { id: themeLoader; source: "Theme.qml"; asynchronous: false }
+    color: themeLoader.item.rootBackground
     
     // Animated gradient background
     Rectangle {
         anchors.fill: parent
         gradient: Gradient {
-            GradientStop { position: 0.0; color: "#1a0a2e" }
-            GradientStop { position: 0.5; color: "#16213e" }
-            GradientStop { position: 1.0; color: "#0f0e17" }
+            GradientStop { position: 0.0; color: themeLoader.item.backgroundGradient0 }
+            GradientStop { position: 0.5; color: themeLoader.item.backgroundGradient1 }
+            GradientStop { position: 1.0; color: themeLoader.item.backgroundGradient2 }
         }
     }
     
@@ -23,15 +24,15 @@ Rectangle {
         width: 420
         height: 550
         anchors.centerIn: parent
-        color: Qt.rgba(0.08, 0.08, 0.12, 0.95)
+        color: themeLoader.item.containerBackground
         radius: 24
-        border.color: Qt.rgba(0.3, 0.3, 0.4, 0.3)
+        border.color: themeLoader.item.containerBorder
         border.width: 1
         
         layer.enabled: true
         layer.effect: MultiEffect {
             shadowEnabled: true
-            shadowColor: "#80000000"
+            shadowColor: themeLoader.item.shadowColor
             shadowBlur: 0.4
             shadowVerticalOffset: 20
             shadowHorizontalOffset: 0
@@ -57,8 +58,8 @@ Rectangle {
                         height: 60
                         radius: 30
                         gradient: Gradient {
-                            GradientStop { position: 0.0; color: "#6366f1" }
-                            GradientStop { position: 1.0; color: "#8b5cf6" }
+                            GradientStop { position: 0.0; color: themeLoader.item.logoGradient0 }
+                            GradientStop { position: 1.0; color: themeLoader.item.logoGradient1 }
                         }
                         
                         Text {
@@ -66,7 +67,7 @@ Rectangle {
                             text: "PM"
                             font.pixelSize: 24
                             font.bold: true
-                            color: "white"
+                            color: themeLoader.item.textPrimary
                         }
                     }
                     
@@ -75,14 +76,14 @@ Rectangle {
                         text: "Project Manager"
                         font.pixelSize: 28
                         font.bold: true
-                        color: "white"
+                        color: themeLoader.item.textPrimary
                     }
                     
                     Text {
                         Layout.alignment: Qt.AlignHCenter
                         text: "Sign in to continue"
                         font.pixelSize: 14
-                        color: "#94a3b8"
+                        color: themeLoader.item.textSecondary
                     }
                 }
             }
@@ -96,15 +97,15 @@ Rectangle {
                     text: "Username"
                     font.pixelSize: 13
                     font.weight: Font.Medium
-                    color: "#cbd5e1"
+                    color: themeLoader.item.textOnContainer
                 }
                 
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 48
-                    color: Qt.rgba(0.15, 0.15, 0.2, 0.6)
+                    color: themeLoader.item.containerOverlay
                     radius: 12
-                    border.color: usernameField.activeFocus ? "#6366f1" : Qt.rgba(0.3, 0.3, 0.4, 0.3)
+                    border.color: usernameField.activeFocus ? themeLoader.item.primary : themeLoader.item.fieldBorderDefault
                     border.width: 2
                     
                     Behavior on border.color {
@@ -116,8 +117,8 @@ Rectangle {
                         anchors.fill: parent
                         anchors.margins: 2
                         placeholderText: "Enter your username"
-                        placeholderTextColor: "#64748b"
-                        color: "white"
+                        placeholderTextColor: themeLoader.item.textMuted
+                        color: themeLoader.item.textPrimary
                         font.pixelSize: 15
                         leftPadding: 16
                         background: Rectangle {
@@ -138,15 +139,15 @@ Rectangle {
                     text: "Password"
                     font.pixelSize: 13
                     font.weight: Font.Medium
-                    color: "#cbd5e1"
+                    color: themeLoader.item.textOnContainer
                 }
                 
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 48
-                    color: Qt.rgba(0.15, 0.15, 0.2, 0.6)
+                    color: themeLoader.item.containerOverlay
                     radius: 12
-                    border.color: passwordField.activeFocus ? "#6366f1" : Qt.rgba(0.3, 0.3, 0.4, 0.3)
+                    border.color: passwordField.activeFocus ? themeLoader.item.primary : themeLoader.item.fieldBorderDefault
                     border.width: 2
                     
                     Behavior on border.color {
@@ -158,8 +159,8 @@ Rectangle {
                         anchors.fill: parent
                         anchors.margins: 2
                         placeholderText: "Enter your password"
-                        placeholderTextColor: "#64748b"
-                        color: "white"
+                        placeholderTextColor: themeLoader.item.textMuted
+                        color: themeLoader.item.textPrimary
                         font.pixelSize: 15
                         leftPadding: 16
                         echoMode: TextInput.Password
@@ -179,7 +180,7 @@ Rectangle {
                 Layout.preferredHeight: 20
                 text: ""
                 font.pixelSize: 13
-                color: "#ef4444"
+                color: themeLoader.item.error
                 horizontalAlignment: Text.AlignHCenter
                 wrapMode: Text.WordWrap
             }
@@ -203,8 +204,8 @@ Rectangle {
                 background: Rectangle {
                     radius: 12
                     gradient: Gradient {
-                        GradientStop { position: 0.0; color: loginButton.pressed ? "#5558e3" : "#6366f1" }
-                        GradientStop { position: 1.0; color: loginButton.pressed ? "#7c3aed" : "#8b5cf6" }
+                        GradientStop { position: 0.0; color: loginButton.pressed ? themeLoader.item.primaryPressed0 : themeLoader.item.primary }
+                        GradientStop { position: 1.0; color: loginButton.pressed ? themeLoader.item.primaryPressed1 : themeLoader.item.primaryAlt }
                     }
                     
                     Behavior on scale {
@@ -217,12 +218,12 @@ Rectangle {
                 onClicked: {
                     if (usernameField.text === "" || passwordField.text === "") {
                         statusMessage.text = "Please fill in all fields"
-                        statusMessage.color = "#ef4444"
+                        statusMessage.color = themeLoader.item.error
                         return
                     }
                     
                     statusMessage.text = "Authenticating..."
-                    statusMessage.color = "#3b82f6"
+                    statusMessage.color = themeLoader.item.info
                     loginManager.login(usernameField.text, passwordField.text)
                 }
                 
@@ -245,7 +246,7 @@ Rectangle {
         
         function onLoginSuccess(username) {
             statusMessage.text = "Login successful! Welcome " + username
-            statusMessage.color = "#22c55e"
+            statusMessage.color = themeLoader.item.success
             
             // Clear fields after successful login
             usernameField.text = ""
@@ -256,7 +257,7 @@ Rectangle {
         
         function onLoginFailed(errorMessage) {
             statusMessage.text = errorMessage
-            statusMessage.color = "#ef4444"
+            statusMessage.color = themeLoader.item.error
             passwordField.text = ""
             passwordField.forceActiveFocus()
         }
@@ -264,7 +265,7 @@ Rectangle {
         function onLoginStatusChanged(status) {
             if (status.indexOf("Authenticating") !== -1) {
                 statusMessage.text = status
-                statusMessage.color = "#3b82f6"
+                statusMessage.color = themeLoader.item.info
             }
         }
     }
