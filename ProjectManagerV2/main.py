@@ -1,6 +1,7 @@
 import sys
 import os
 from pathlib import Path
+
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtCore import QUrl
@@ -29,7 +30,7 @@ def main():
     login_manager = LoginManager()
 
     engine.rootContext().setContextProperty("loginManager", login_manager)
-    
+
     # Prefer loading QML from resources (qrc). If compiled resources module
     # isn't available, fall back to loading local files. To compile resources
     # run: `pyside6-rcc resources.qrc -o resources_rc.py` in the ProjectManagerV2 folder.
