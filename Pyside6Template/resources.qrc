@@ -1,0 +1,15 @@
+<RCC version="1.0">
+    <qresource prefix="/">
+        <file>Screens/LoginScreen.qml</file>
+        <file>Screens/Theme.qml</file>
+        <file>Screens/HomeScreen.qml</file>
+    </qresource>
+    <qresource prefix="/">
+        <file>main.qml</file>
+    </qresource>
+    <qresource prefix="/">
+        <file>Assets/folder-icon.svg</file>
+        <file>Assets/settings-icon.svg</file>
+        <file>Assets/add-icon.svg</file>
+    </qresource>
+</RCC>
