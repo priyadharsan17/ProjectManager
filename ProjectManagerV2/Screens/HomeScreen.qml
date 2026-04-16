@@ -161,12 +161,12 @@ Rectangle {
                                 GradientStop { position: 1.0; color: themeLoader.item.primaryAlt }
                             }
 
-                            Text {
+                            Image {
                                 anchors.centerIn: parent
-                                text: "+"
-                                font.pixelSize: 56
-                                font.bold: true
-                                color: themeLoader.item.textPrimary
+                                source: "qrc:/Assets/add-icon.svg"
+                                width: parent.width * 0.6
+                                height: parent.height * 0.6
+                                fillMode: Image.PreserveAspectFit
                             }
 
                             scale: createProjectArea.containsMouse ? 1.1 : 1.0
@@ -212,10 +212,12 @@ Rectangle {
                                 GradientStop { position: 1.0; color: "#059669" }
                             }
 
-                            Text {
+                            Image {
                                 anchors.centerIn: parent
-                                text: "📁"
-                                font.pixelSize: 50
+                                source: "qrc:/Assets/folder-icon.svg"
+                                width: parent.width * 0.6
+                                height: parent.height * 0.6
+                                fillMode: Image.PreserveAspectFit
                             }
 
                             scale: openProjectArea.containsMouse ? 1.1 : 1.0
@@ -255,10 +257,12 @@ Rectangle {
                                 GradientStop { position: 1.0; color: "#d97706" }
                             }
 
-                            Text {
+                            Image {
                                 anchors.centerIn: parent
-                                text: "⚙"
-                                font.pixelSize: 50
+                                source: "qrc:/Assets/settings-icon.svg"
+                                width: parent.width * 0.6
+                                height: parent.height * 0.6
+                                fillMode: Image.PreserveAspectFit
                             }
 
                             scale: settingsArea.containsMouse ? 1.1 : 1.0
