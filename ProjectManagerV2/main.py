@@ -5,6 +5,8 @@ from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtCore import QUrl
 
+from Backend.LoginManager import LoginManager
+
 def main():
     """
     Main entry point for the Project Manager application.
@@ -22,7 +24,11 @@ def main():
     
     # Create QML engine
     engine = QQmlApplicationEngine()
-    
+
+    # Create and expose the LoginManager to QML
+    login_manager = LoginManager()
+
+    engine.rootContext().setContextProperty("loginManager", login_manager)
     # Load the main QML file
     qml_file = Path(__file__).parent / "main.qml"
     engine.load(QUrl.fromLocalFile(str(qml_file)))
