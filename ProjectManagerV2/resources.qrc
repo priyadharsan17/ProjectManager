@@ -3,6 +3,9 @@
         <file>Screens/LoginScreen.qml</file>
         <file>Screens/Theme.qml</file>
         <file>Screens/HomeScreen.qml</file>
+        <file>Screens/SettingsScreen.qml</file>
+        <file>Screens/CreateProjectScreen.qml</file>
+        <file>Screens/ProjectListScreen.qml</file>
     </qresource>
     <qresource prefix="/">
         <file>main.qml</file>

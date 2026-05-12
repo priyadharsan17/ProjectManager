@@ -66,6 +66,21 @@ class ScreenLoader(QObject):
         self.loadScreen("Screens/LoginScreen.qml")
     
     @Slot()
+    def loadCreateProjectScreen(self):
+        """Load the create project screen."""
+        self.loadScreen("Screens/CreateProjectScreen.qml")
+
+    @Slot()
+    def loadProjectListScreen(self):
+        """Load the project list screen."""
+        self.loadScreen("Screens/ProjectListScreen.qml")
+
+    @Slot()
+    def loadSettingsScreen(self):
+        """Load the settings screen."""
+        self.loadScreen("Screens/SettingsScreen.qml")
+
+    @Slot()
     def goBack(self):
         """Navigate back to the previous screen."""
         if self._previous_screen:
